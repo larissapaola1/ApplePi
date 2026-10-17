@@ -1,0 +1,2 @@
+# Optional plotting dependency; modelling dependencies remain in requirements.txt.
+matplotlib>=3.7,<4
