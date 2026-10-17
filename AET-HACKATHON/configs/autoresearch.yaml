@@ -1,5 +1,0 @@
-# The autoresearch candidate (AUTORESEARCH.md). The agent may edit this file; only `exp` is evaluated,
-# by tools/autoresearch.py. It starts as the frozen final configuration (I2).
-extends: core.yaml
-candidates:
-  - {name: exp, residual_scale: 0.8, features: {prev_day_edge: false}}

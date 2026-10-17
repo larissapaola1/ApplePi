@@ -1,3 +1,0 @@
-# Optional UI. Install modelling dependencies from requirements.txt first.
-streamlit>=1.40,<2
-plotly>=5.24,<7

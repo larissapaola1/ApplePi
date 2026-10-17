@@ -1,4 +1,22 @@
 .DS_Store
 __pycache__/
+.pytest_cache/
 .ipynb_checkpoints/
-.venv/
+.venv*/
+*.Rhistory
+dist/
+
+# Data is not redistributed: place the official CSV in data/ (see data/README.md)
+data/*
+!data/README.md
+!data/README_participants.txt
+
+# Generated outputs; only the curated summary is committed
+results/*
+!results/README.md
+!results/summary.csv
+artifacts_retrained/
+artifacts_september_assessment/
+predictions.csv
+
+/AET-HACKATHON/

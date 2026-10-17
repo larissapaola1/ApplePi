@@ -1,0 +1,3 @@
+# Tests. Install the model dependencies first: pip install -r requirements.txt
+-r requirements.txt
+pytest==9.1.1
