@@ -1,0 +1,14 @@
+stage,method,MAE
+selection_Jan_May,AET,3.7726330329668785
+selection_Jan_May,Previous optimized graph,3.969493499219631
+selection_Jan_May,Previous fixed blend,3.757325509619305
+selection_Jan_May,adaptive_point,3.9771389062483706
+selection_Jan_May,clustered_point,4.015756363021982
+selection_Jan_May,clustered_bayesian,3.9610648257270977
+selection_Jan_May,no_message_bayesian,3.955451566193744
+selection_Jan_May,New selected blend,3.768149148001028
+confirmation_Jun_Aug,AET,4.224641488360218
+confirmation_Jun_Aug,Previous optimized graph,4.344014443410185
+confirmation_Jun_Aug,Previous fixed blend,4.205745131056596
+confirmation_Jun_Aug,clustered_bayesian,4.335854774477775
+confirmation_Jun_Aug,New selected blend,4.2195374810387

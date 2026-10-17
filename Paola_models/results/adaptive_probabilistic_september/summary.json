@@ -1,0 +1,172 @@
+{
+  "period": [
+    "2026-09-19",
+    "2026-09-30"
+  ],
+  "dates": 12,
+  "zones": [
+    "ZONE_0",
+    "ZONE_1",
+    "ZONE_2",
+    "ZONE_3"
+  ],
+  "rows": 4608,
+  "model": "Paola_models/results/adaptive_probabilistic_study/artifact_clustered_bayesian",
+  "weight_cutoff": "2026-08-17",
+  "data_cutoff": "2026-08-31",
+  "locked_selection": {
+    "point_candidate": "clustered_bayesian",
+    "probabilistic_candidate": "clustered_bayesian",
+    "blend_graph_weight": 0.1,
+    "blend_trials": [
+      {
+        "graph_weight": 0,
+        "selection_MAE": 3.7726330329668785
+      },
+      {
+        "graph_weight": 0.1,
+        "selection_MAE": 3.768149148001028
+      },
+      {
+        "graph_weight": 0.25,
+        "selection_MAE": 3.7718807899046984
+      },
+      {
+        "graph_weight": 0.5,
+        "selection_MAE": 3.8040347881788024
+      },
+      {
+        "graph_weight": 1,
+        "selection_MAE": 3.9610648257270977
+      }
+    ]
+  },
+  "new_training_or_selection": false,
+  "new_calibration": false,
+  "scores": [
+    {
+      "method": "AET",
+      "MAE_EUR_MWh": 5.044273575614974
+    },
+    {
+      "method": "Previous optimized graph",
+      "MAE_EUR_MWh": 5.323047205313759
+    },
+    {
+      "method": "Previous 25% graph blend",
+      "MAE_EUR_MWh": 4.99793898887743
+    },
+    {
+      "method": "New Bayesian graph",
+      "MAE_EUR_MWh": 5.116505208915994
+    },
+    {
+      "method": "New frozen 10% Bayesian blend",
+      "MAE_EUR_MWh": 5.030284790013281
+    }
+  ],
+  "uncertainty_equal_zone_average": {
+    "raw90_inside": 0.8663194444444445,
+    "calibrated90_inside": 0.9411892361111112,
+    "interval_width": 30.282694928071276,
+    "interval_score90": 35.41028336068365,
+    "CRPS": 3.786228986760398,
+    "whole_zone_day_inside": 0.08333333333333333
+  },
+  "prediction_checks": {
+    "AET": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "Previous optimized graph": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "Previous 25% graph blend": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "New Bayesian graph": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "New frozen 10% Bayesian blend": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 5.002220859751105e-11
+    }
+  },
+  "inference_metadata": {
+    "data_cutoff": "2026-08-31",
+    "weight_cutoff": "2026-08-17",
+    "checks": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "intervals": "empirically calibrated marginal 90%; no coverage guarantee under shift",
+    "scenarios": "raw Bayesian predictive draws; hourly means preserved; not conformally adjusted",
+    "negative_probabilities": "raw model probabilities, not separately calibrated",
+    "graph": "learned attention, source to target; not causal trade flows"
+  },
+  "aet_diagnostics": {
+    "output": "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/adaptive_probabilistic_september/aet_predictions.csv",
+    "candidate": "final",
+    "rows": 4608,
+    "hours": 1152,
+    "max_abs_mean_error": 2.5011104298755527e-11,
+    "dates": [
+      "2026-09-19",
+      "2026-09-20",
+      "2026-09-21",
+      "2026-09-22",
+      "2026-09-23",
+      "2026-09-24",
+      "2026-09-25",
+      "2026-09-26",
+      "2026-09-27",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30"
+    ],
+    "fallback_hours": 0,
+    "flat_hours": 0,
+    "unknown_zone_hours": 0,
+    "seconds": 0.23
+  },
+  "unchanged_artifact_hashes": {
+    "Paola_models/results/adaptive_probabilistic_study/artifact_clustered_bayesian/weights.pt": "fbcd32515665d0a8a5749bd6c5b91b5edfdc77bd14259a6e6e9fe503dcb1e03f",
+    "Paola_models/results/adaptive_probabilistic_study/artifact_clustered_bayesian/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/adaptive_probabilistic_study/artifact_clustered_bayesian/manifest.json": "2ceadcbf02ee27a715dd2acfa8a3d3d4fad99975fa13c4c1f18ee8e057ad1b81",
+    "Paola_models/results/adaptive_probabilistic_study/artifact_clustered_bayesian/transforms.npz": "5b2bf3253c9e784bf48b5d2c7827496b522a9e62a3841743b87e6b619349b83f",
+    "AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/manifest.json": "a74635b6d7090801902e84708362061ccd6ef1ebe01bb785dbb55c1e754c56b5",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/scaler.npz": "9a32326219d06fbdcfc7e2bb5ba9fa75bf6dae9e581ca3849c4655f3c965308d",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/weights.pt": "911397b2ef29d627f9c594ab7dfe40ba4bbac9b6271ff1deb5a560d7ac740830",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/manifest.json": "ba13dea0617362d4517a9fc3d0b0f8da83689a1c0857fb07232bdb9a5966d2f2",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  },
+  "input_hashes": {
+    "test_hourly.csv": "77c8a5304338359af9db07f76d0749fbfcffa0b3e6e5e9a1f0ca3afe2476314b",
+    "history_15min.csv": "16e341aaf310f99e58c923fadf887daea90e2e6b7cca316c4ce59013321b8272",
+    "truth_15min.csv": "25defa40555d6c4523ee1234a5b24d1dbf2175e30c288ca887843103e1e65977"
+  }
+}

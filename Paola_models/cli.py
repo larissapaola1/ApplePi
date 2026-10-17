@@ -1,5 +1,5 @@
 """Offline training, inference, and a fixed eight-fold TGNN comparison."""
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 import argparse
 import hashlib
@@ -46,7 +46,15 @@ def train(args):
     if args.out.exists():
         raise FileExistsError("choose a new output directory; artifacts are never overwritten")
     cube = training_cube(args.train, args.train_end)
-    model = GraphReconstructor(Config(epochs=args.epochs, graph=not args.no_graph)).fit(cube)
+    cfg = Config()
+    if args.recipe:
+        settings = json.loads(args.recipe.read_text())
+        cfg = Config(**settings.get("config", settings))
+    if args.epochs is not None:
+        cfg = replace(cfg, epochs=args.epochs)
+    if args.no_graph:
+        cfg = replace(cfg, graph=False)
+    model = GraphReconstructor(cfg).fit(cube)
     model.save(args.out)
     print(json.dumps({"saved": str(args.out), "training_range": model.training_range,
                       "parameters": sum(p.numel() for p in model.network.parameters()),
@@ -57,7 +65,18 @@ def infer(args):
     hourly = read_hourly(args.hourly)
     if len(hourly) == 0:
         raise ValueError("empty hourly input")
-    model = GraphReconstructor.load(args.model)
+    manifest = json.loads((args.model/"manifest.json").read_text())
+    if manifest.get("kind") == "aet_graph_blend":
+        from .hybrid import HybridReconstructor
+        model = HybridReconstructor.load(args.model)
+    elif manifest.get("kind") == "adaptive_probabilistic_graph":
+        from .probabilistic_graph import ProbabilisticGraph
+        model = ProbabilisticGraph.load(args.model)
+    elif manifest.get("kind") == "aet_residual_graph":
+        from .residual_graph import AETResidualReconstructor
+        model = AETResidualReconstructor.load(args.model)
+    else:
+        model = GraphReconstructor.load(args.model)
     history = model.training_history
     if args.history:
         supplied = QuarterCube.from_long(read_quarter_hourly(args.history, strict=False), ZONES)
@@ -181,10 +200,11 @@ def main():
         q = sub.add_parser(name)
         q.add_argument("--train", type=Path, default=REPO/"Data/train_prices_15min.csv")
         q.add_argument("--out", type=Path, required=True)
-        q.add_argument("--epochs", type=int, default=80)
+        q.add_argument("--epochs", type=int, default=None if name=="train" else 80)
         q.add_argument("--no-graph", action="store_true", help="temporal-only comparison, same features")
         if name=="train":
             q.add_argument("--train-end", default="2026-08-31")
+            q.add_argument("--recipe", type=Path, help="config JSON, e.g. selection_before_confirmation.json")
         q.set_defaults(func=train if name=="train" else backtest)
     q = sub.add_parser("infer")
     q.add_argument("--hourly", type=Path, required=True)

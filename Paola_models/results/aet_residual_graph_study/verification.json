@@ -1,0 +1,16 @@
+{
+  "tests_passed": 82,
+  "standalone_retraining_reproduces_weights_scaler_and_predictions": true,
+  "synthetic_graph_prediction_checks": {
+    "rows": 384,
+    "hours": 96,
+    "max_abs_mean_error": 2.5011104298755527e-11
+  },
+  "synthetic_no_message_prediction_checks": {
+    "rows": 384,
+    "hours": 96,
+    "max_abs_mean_error": 2.5011104298755527e-11
+  },
+  "serialized_outer_fold_checks_file": "serialized_prediction_checks.csv",
+  "original_artifact_hashes_verified_again": true
+}

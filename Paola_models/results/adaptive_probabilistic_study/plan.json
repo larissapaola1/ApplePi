@@ -1,0 +1,97 @@
+{
+  "candidates": {
+    "adaptive_point": {
+      "hidden": 24,
+      "epochs": 100,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.002,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "clustered": false,
+      "bayesian": false,
+      "calibration_days": 0,
+      "residual_scale": 0.8,
+      "target_scale": 10.0,
+      "draws": 64
+    },
+    "clustered_point": {
+      "hidden": 24,
+      "epochs": 100,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.002,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "clustered": true,
+      "bayesian": false,
+      "calibration_days": 0,
+      "residual_scale": 0.8,
+      "target_scale": 10.0,
+      "draws": 64
+    },
+    "clustered_bayesian": {
+      "hidden": 24,
+      "epochs": 100,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.002,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "clustered": true,
+      "bayesian": true,
+      "calibration_days": 14,
+      "residual_scale": 0.8,
+      "target_scale": 10.0,
+      "draws": 64
+    },
+    "no_message_bayesian": {
+      "hidden": 24,
+      "epochs": 100,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.002,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": false,
+      "clustered": true,
+      "bayesian": true,
+      "calibration_days": 14,
+      "residual_scale": 0.8,
+      "target_scale": 10.0,
+      "draws": 64
+    }
+  },
+  "selection_folds": [
+    "m2026_01",
+    "m2026_02",
+    "m2026_03",
+    "m2026_04",
+    "m2026_05"
+  ],
+  "confirmation_folds": [
+    "m2026_06",
+    "m2026_07",
+    "m2026_08"
+  ],
+  "blend_graph_weights": [
+    0,
+    0.1,
+    0.25,
+    0.5,
+    1
+  ],
+  "selection_rule": "minimum selection MAE among graph-enabled models; no-message is a control",
+  "uncertainty_model": "clustered_bayesian regardless of which point candidate wins",
+  "no_retuning_after_confirmation": true,
+  "no_September_or_October": true,
+  "probabilistic_calibration": "last 14 calendar days within each training cutoff; excluded from weights, scalers, clustering and graph priors",
+  "limitation": "development dates were inspected before; this is not a new independent test"
+}

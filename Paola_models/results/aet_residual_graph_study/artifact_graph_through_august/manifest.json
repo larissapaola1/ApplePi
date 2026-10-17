@@ -1,0 +1,59 @@
+{
+  "kind": "aet_residual_graph",
+  "strength": 0.25,
+  "training_range": [
+    "2025-10-01",
+    "2026-08-31"
+  ],
+  "selection": {
+    "candidates": {
+      "graph": {
+        "config": {
+          "hidden": 16,
+          "epochs": 80,
+          "batch_days": 16,
+          "learning_rate": 0.001,
+          "weight_decay": 0.01,
+          "dropout": 0.15,
+          "correction_penalty": 0.02,
+          "target_scale": 5.0,
+          "seed": 42,
+          "threads": 4,
+          "graph": true
+        },
+        "candidate": "graph",
+        "strength": 0.25,
+        "selection_MAE": 3.760352242327313
+      },
+      "no_message": {
+        "config": {
+          "hidden": 16,
+          "epochs": 80,
+          "batch_days": 16,
+          "learning_rate": 0.001,
+          "weight_decay": 0.01,
+          "dropout": 0.15,
+          "correction_penalty": 0.02,
+          "target_scale": 5.0,
+          "seed": 42,
+          "threads": 4,
+          "graph": false
+        },
+        "candidate": "no_message",
+        "strength": 0.25,
+        "selection_MAE": 3.749945638361112
+      }
+    },
+    "selected_candidate": "no_message",
+    "selection_folds": [
+      "m2026_01",
+      "m2026_02",
+      "m2026_03",
+      "m2026_04",
+      "m2026_05"
+    ],
+    "rule": "minimum Jan-May price MAE per candidate; ties prefer smaller correction, including zero"
+  },
+  "formula": "AET + strength * GNN(AET_OOF_errors)",
+  "fitting_at_inference": false
+}

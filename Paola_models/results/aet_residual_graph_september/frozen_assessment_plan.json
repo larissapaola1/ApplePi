@@ -1,0 +1,105 @@
+{
+  "period": [
+    "2026-09-19",
+    "2026-09-30"
+  ],
+  "variants": [
+    "graph",
+    "no_message"
+  ],
+  "selection": {
+    "candidates": {
+      "graph": {
+        "config": {
+          "hidden": 16,
+          "epochs": 80,
+          "batch_days": 16,
+          "learning_rate": 0.001,
+          "weight_decay": 0.01,
+          "dropout": 0.15,
+          "correction_penalty": 0.02,
+          "target_scale": 5.0,
+          "seed": 42,
+          "threads": 4,
+          "graph": true
+        },
+        "candidate": "graph",
+        "strength": 0.25,
+        "selection_MAE": 3.760352242327313
+      },
+      "no_message": {
+        "config": {
+          "hidden": 16,
+          "epochs": 80,
+          "batch_days": 16,
+          "learning_rate": 0.001,
+          "weight_decay": 0.01,
+          "dropout": 0.15,
+          "correction_penalty": 0.02,
+          "target_scale": 5.0,
+          "seed": 42,
+          "threads": 4,
+          "graph": false
+        },
+        "candidate": "no_message",
+        "strength": 0.25,
+        "selection_MAE": 3.749945638361112
+      }
+    },
+    "selected_candidate": "no_message",
+    "selection_folds": [
+      "m2026_01",
+      "m2026_02",
+      "m2026_03",
+      "m2026_04",
+      "m2026_05"
+    ],
+    "rule": "minimum Jan-May price MAE per candidate; ties prefer smaller correction, including zero"
+  },
+  "rule": "load both saved artifacts unchanged; no September strength search or fitting",
+  "input_hashes": {
+    "test_hourly.csv": "77c8a5304338359af9db07f76d0749fbfcffa0b3e6e5e9a1f0ca3afe2476314b",
+    "history_15min.csv": "16e341aaf310f99e58c923fadf887daea90e2e6b7cca316c4ce59013321b8272",
+    "truth_15min.csv": "25defa40555d6c4523ee1234a5b24d1dbf2175e30c288ca887843103e1e65977"
+  },
+  "original_artifact_hashes": {
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/manifest.json": "11aea7974dfd1f1bc379811bd90789b0efa0ddf4ed29107203cc49fc8578c165",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/correction/scaler.npz": "732caf92b6f79a42e800ac1050e99bb562ae48560cf31f1b376e687cc4118a3a",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/correction/weights.pt": "e2c302e130e56b69f4058273b581b82f88aaad392139a501bdabe2fcc85203bb",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/correction/manifest.json": "4fcefbd48a394a3a6afd093e2e229bb18f69ef29b34141154b47c40b880af655",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "Paola_models/results/aet_residual_graph_study/artifact_graph_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/manifest.json": "11aea7974dfd1f1bc379811bd90789b0efa0ddf4ed29107203cc49fc8578c165",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/correction/scaler.npz": "732caf92b6f79a42e800ac1050e99bb562ae48560cf31f1b376e687cc4118a3a",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/correction/weights.pt": "bf2dad157f20432be6f30d3b00479167a2cb5cf194eab832387a98464c8f8556",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/correction/manifest.json": "e0eab585498138f8ca8af76a4ad549c8986bd428dda08092ae336b123eae0319",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "Paola_models/results/aet_residual_graph_study/artifact_no_message_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/manifest.json": "a74635b6d7090801902e84708362061ccd6ef1ebe01bb785dbb55c1e754c56b5",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/scaler.npz": "9a32326219d06fbdcfc7e2bb5ba9fa75bf6dae9e581ca3849c4655f3c965308d",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/weights.pt": "911397b2ef29d627f9c594ab7dfe40ba4bbac9b6271ff1deb5a560d7ac740830",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/manifest.json": "ba13dea0617362d4517a9fc3d0b0f8da83689a1c0857fb07232bdb9a5966d2f2",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  }
+}

@@ -183,7 +183,7 @@ class GraphReconstructor:
             total = 0.
             for ids in order.split(self.config.batch_days):
                 optimizer.zero_grad(set_to_none=True)
-                # Direct L1 in decoded quarter-price space, not a coefficient surrogate.
+                # Keep logged price MAE separate from the optional AET coefficient-L1 surrogate.
                 difference = self.network(X[ids])-target[ids]
                 error = difference.abs().mean()
                 objective = ((difference @ self.network.basis).abs().mean()

@@ -1,0 +1,58 @@
+{
+  "kind": "aet_graph_blend",
+  "graph_weight": 0.25,
+  "training_range": [
+    "2025-10-01",
+    "2026-08-31"
+  ],
+  "selection": {
+    "candidate": "compact_local",
+    "config": {
+      "hidden": 24,
+      "blocks": 1,
+      "epochs": 120,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "coefficient",
+      "residual_scale": 0.8,
+      "local_skip": true
+    },
+    "graph_weight": 0.25,
+    "selection_folds": [
+      "m2026_01",
+      "m2026_02",
+      "m2026_03",
+      "m2026_04",
+      "m2026_05"
+    ],
+    "blend_trials": [
+      {
+        "graph_weight": 0.0,
+        "search_MAE": 3.7726330329668785
+      },
+      {
+        "graph_weight": 0.1,
+        "search_MAE": 3.760483074233991
+      },
+      {
+        "graph_weight": 0.25,
+        "search_MAE": 3.757325509619305
+      },
+      {
+        "graph_weight": 0.5,
+        "search_MAE": 3.7877448247879038
+      },
+      {
+        "graph_weight": 1.0,
+        "search_MAE": 3.969493499219631
+      }
+    ]
+  }
+}

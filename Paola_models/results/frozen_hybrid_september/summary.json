@@ -1,0 +1,122 @@
+{
+  "assessment_start": "2026-09-19",
+  "assessment_end": "2026-09-30",
+  "dates": 12,
+  "zones": 4,
+  "predictions": 4608,
+  "training_cutoff": "2026-08-31",
+  "score_below_5": true,
+  "frozen_blend_MAE": 4.99793898887743,
+  "margin_below_5": 0.0020610111225698446,
+  "AET_MAE": 5.044273575614974,
+  "relative_gain_vs_AET_pct": 0.9185581638857632,
+  "graph_weight": 0.25,
+  "selection": {
+    "candidate": "compact_local",
+    "config": {
+      "hidden": 24,
+      "blocks": 1,
+      "epochs": 120,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "coefficient",
+      "residual_scale": 0.8,
+      "local_skip": true
+    },
+    "graph_weight": 0.25,
+    "selection_folds": [
+      "m2026_01",
+      "m2026_02",
+      "m2026_03",
+      "m2026_04",
+      "m2026_05"
+    ],
+    "blend_trials": [
+      {
+        "graph_weight": 0.0,
+        "search_MAE": 3.7726330329668785
+      },
+      {
+        "graph_weight": 0.1,
+        "search_MAE": 3.760483074233991
+      },
+      {
+        "graph_weight": 0.25,
+        "search_MAE": 3.757325509619305
+      },
+      {
+        "graph_weight": 0.5,
+        "search_MAE": 3.7877448247879038
+      },
+      {
+        "graph_weight": 1.0,
+        "search_MAE": 3.969493499219631
+      }
+    ]
+  },
+  "new_fitting_or_tuning_on_September": false,
+  "validation": {
+    "AET LightGBM": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "Original TGNN": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "Optimized TGNN": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    },
+    "Frozen 25% graph / 75% AET blend": {
+      "rows": 4608,
+      "hours": 1152,
+      "max_abs_mean_error": 2.5011104298755527e-11
+    }
+  },
+  "artifact_hashes": {
+    "AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "Paola_models/artifacts/through_august/scaler.npz": "d2910b3e3edda8a3897234d5694a22ce4cb26a1d9c4a27061e55f8c9c073c8cb",
+    "Paola_models/artifacts/through_august/weights.pt": "7a70f63704652fdc2441e83b73f3484f8876eb0b40e0fca5c6c7805a829fbb02",
+    "Paola_models/artifacts/through_august/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/artifacts/through_august/manifest.json": "7946f204e4af871a610122eeb280deb7a4925f959afad3350361c71a15f4e33b",
+    "Paola_models/results/aet_informed_optimization/selected_graph_through_august/scaler.npz": "9a32326219d06fbdcfc7e2bb5ba9fa75bf6dae9e581ca3849c4655f3c965308d",
+    "Paola_models/results/aet_informed_optimization/selected_graph_through_august/weights.pt": "911397b2ef29d627f9c594ab7dfe40ba4bbac9b6271ff1deb5a560d7ac740830",
+    "Paola_models/results/aet_informed_optimization/selected_graph_through_august/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_graph_through_august/manifest.json": "ba13dea0617362d4517a9fc3d0b0f8da83689a1c0857fb07232bdb9a5966d2f2",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/manifest.json": "a74635b6d7090801902e84708362061ccd6ef1ebe01bb785dbb55c1e754c56b5",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/scaler.npz": "9a32326219d06fbdcfc7e2bb5ba9fa75bf6dae9e581ca3849c4655f3c965308d",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/weights.pt": "911397b2ef29d627f9c594ab7dfe40ba4bbac9b6271ff1deb5a560d7ac740830",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/manifest.json": "ba13dea0617362d4517a9fc3d0b0f8da83689a1c0857fb07232bdb9a5966d2f2",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  },
+  "input_hashes": {
+    "test_hourly.csv": "77c8a5304338359af9db07f76d0749fbfcffa0b3e6e5e9a1f0ca3afe2476314b",
+    "history_15min.csv": "16e341aaf310f99e58c923fadf887daea90e2e6b7cca316c4ce59013321b8272",
+    "truth_15min.csv": "25defa40555d6c4523ee1234a5b24d1dbf2175e30c288ca887843103e1e65977"
+  }
+}

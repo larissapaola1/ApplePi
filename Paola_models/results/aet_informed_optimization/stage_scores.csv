@@ -1,0 +1,9 @@
+stage,method,MAE
+confirmation_Jun_Aug,AET incumbent,4.224641488360218
+confirmation_Jun_Aug,Original TGNN,4.5368776815136975
+confirmation_Jun_Aug,Selected TGNN,4.344014443410185
+confirmation_Jun_Aug,Selected blend,4.205745131056597
+selection_Jan_May,AET incumbent,3.7726330329668785
+selection_Jan_May,Original TGNN,4.086393031048962
+selection_Jan_May,Selected TGNN,3.969493499219631
+selection_Jan_May,Selected blend,3.757325509619305

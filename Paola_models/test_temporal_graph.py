@@ -108,3 +108,76 @@ def test_training_rejects_october_2026(cube):
     bad = QuarterCube(cube.dates+np.timedelta64(365,"D"),ZONES,cube.values)
     with pytest.raises(ValueError,match="official"):
         GraphReconstructor(Config(epochs=1)).fit(bad)
+
+
+def test_aet_variant_and_shrinkage_roundtrip(cube,tmp_path):
+    from dataclasses import replace
+    from aet.baselines import cumulative
+    cfg=Config(hidden=8,blocks=1,epochs=2,threads=1,dropout=0,cross_zone=True,
+               local_skip=True,loss="coefficient",residual_scale=1)
+    model=GraphReconstructor(cfg).fit(cube)
+    assert "z1_spread" in model.feature_names
+    H=cube.hourly()[-1]
+    full=model.predict_day("2025-11-01",H,cube)
+    model.config=replace(cfg,residual_scale=.5)
+    half=model.predict_day("2025-11-01",H,cube)
+    np.testing.assert_allclose(half,cumulative(H)+.5*(full-cumulative(H)),atol=1e-10)
+    model.save(tmp_path/"aet_variant")
+    restored=GraphReconstructor.load(tmp_path/"aet_variant")
+    np.testing.assert_array_equal(restored.predict_day("2025-11-01",H,cube),half)
+
+
+def test_old_manifest_without_new_options_is_loadable(fitted,cube,tmp_path):
+    import json
+    fitted.save(tmp_path/"old")
+    p=tmp_path/"old/manifest.json"
+    meta=json.loads(p.read_text())
+    for key in ["cross_zone","loss","residual_scale","local_skip"]:
+        meta["config"].pop(key)
+    p.write_text(json.dumps(meta))
+    restored=GraphReconstructor.load(tmp_path/"old")
+    np.testing.assert_array_equal(restored.predict_day("2025-11-01",cube.hourly()[-1],cube),
+                                  fitted.predict_day("2025-11-01",cube.hourly()[-1],cube))
+
+
+def test_hybrid_roundtrip_and_no_future_information(fitted,cube,tmp_path):
+    from .hybrid import HybridReconstructor,save_hybrid
+    from aet.pipeline import ShapePipeline,PipelineConfig
+    from aet.schema import validate_predictions
+    tree=ShapePipeline(PipelineConfig(num_boost_round=3)).fit(cube)
+    tree.save(tmp_path/"aet",cube)
+    save_hybrid(tmp_path/"hybrid",fitted,tmp_path/"aet",.25,{"test":True})
+    restored=HybridReconstructor.load(tmp_path/"hybrid")
+    actual=QuarterCube(np.array([np.datetime64("2025-11-01")]),ZONES,cube.values[-1:])
+    hourly=actual.to_long().groupby(["delivery_date","market_id","hour_index"],as_index=False).price_eur_mwh.mean().rename(columns={"price_eur_mwh":"hourly_price_eur_mwh"})
+    output=restored.predict_frame(hourly,cube)
+    validate_predictions(output,hourly)
+    poison=QuarterCube(np.array([np.datetime64("2025-11-01")]),ZONES,np.full((1,4,24,4),999999.))
+    other=restored.predict_frame(hourly,cube.merge(poison))
+    np.testing.assert_array_equal(output.predicted_price_eur_mwh,other.predicted_price_eur_mwh)
+    g=fitted.predict_frame(hourly,cube)
+    a,_=tree.predict_frame(hourly,cube)
+    np.testing.assert_allclose(output.predicted_price_eur_mwh,
+        .25*g.predicted_price_eur_mwh.to_numpy()+.75*a.predicted_price_eur_mwh.to_numpy(),atol=1e-10)
+
+
+def test_cli_can_train_selected_recipe_and_infer(cube,tmp_path):
+    from argparse import Namespace
+    from dataclasses import asdict
+    import json
+    from .cli import train,infer
+    path=tmp_path/"training.csv"
+    cube.to_long().to_csv(path,index=False)
+    cfg=Config(hidden=8,blocks=1,epochs=1,threads=1,cross_zone=True,local_skip=True,
+               loss="coefficient",residual_scale=.8)
+    recipe=tmp_path/"recipe.json"
+    recipe.write_text(json.dumps({"config":asdict(cfg)}))
+    train(Namespace(train=path,train_end="2025-10-31",recipe=recipe,epochs=None,
+                    no_graph=False,out=tmp_path/"model"))
+    meta=json.loads((tmp_path/"model/manifest.json").read_text())
+    assert meta["config"]==asdict(cfg)
+    future=QuarterCube(np.array([np.datetime64("2025-11-01")]),ZONES,cube.values[-1:])
+    hourly=future.to_long().groupby(["delivery_date","market_id","hour_index"],as_index=False).price_eur_mwh.mean().rename(columns={"price_eur_mwh":"hourly_price_eur_mwh"})
+    hourly.to_csv(tmp_path/"hourly.csv",index=False)
+    infer(Namespace(model=tmp_path/"model",history=None,hourly=tmp_path/"hourly.csv",out=tmp_path/"pred.csv"))
+    assert len(pd.read_csv(tmp_path/"pred.csv"))==384

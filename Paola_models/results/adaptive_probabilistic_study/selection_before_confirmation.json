@@ -1,0 +1,27 @@
+{
+  "point_candidate": "clustered_bayesian",
+  "probabilistic_candidate": "clustered_bayesian",
+  "blend_graph_weight": 0.1,
+  "blend_trials": [
+    {
+      "graph_weight": 0,
+      "selection_MAE": 3.7726330329668785
+    },
+    {
+      "graph_weight": 0.1,
+      "selection_MAE": 3.768149148001028
+    },
+    {
+      "graph_weight": 0.25,
+      "selection_MAE": 3.7718807899046984
+    },
+    {
+      "graph_weight": 0.5,
+      "selection_MAE": 3.8040347881788024
+    },
+    {
+      "graph_weight": 1,
+      "selection_MAE": 3.9610648257270977
+    }
+  ]
+}

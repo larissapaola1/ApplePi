@@ -1,0 +1,82 @@
+{
+  "selection": {
+    "candidate": "compact_local",
+    "config": {
+      "hidden": 24,
+      "blocks": 1,
+      "epochs": 120,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "coefficient",
+      "residual_scale": 0.8,
+      "local_skip": true
+    },
+    "graph_weight": 0.25,
+    "selection_folds": [
+      "m2026_01",
+      "m2026_02",
+      "m2026_03",
+      "m2026_04",
+      "m2026_05"
+    ],
+    "blend_trials": [
+      {
+        "graph_weight": 0.0,
+        "search_MAE": 3.7726330329668785
+      },
+      {
+        "graph_weight": 0.1,
+        "search_MAE": 3.760483074233991
+      },
+      {
+        "graph_weight": 0.25,
+        "search_MAE": 3.757325509619305
+      },
+      {
+        "graph_weight": 0.5,
+        "search_MAE": 3.7877448247879038
+      },
+      {
+        "graph_weight": 1.0,
+        "search_MAE": 3.969493499219631
+      }
+    ]
+  },
+  "confirmation_blend_relative_gain_vs_AET": 0.004472890150722941,
+  "confirmation_blend_folds_won": 3,
+  "confirmation_blend_worst_zone_degradation": -0.0022232275533777823,
+  "confirmation_gate_passed": false,
+  "validation": {
+    "predicted_price_eur_mwh": {
+      "rows": 37632,
+      "hours": 9408,
+      "max_abs_mean_error": 1.1368683772161603e-13
+    },
+    "blend_prediction": {
+      "rows": 37632,
+      "hours": 9408,
+      "max_abs_mean_error": 1.1368683772161603e-13
+    }
+  },
+  "artifact_hashes_unchanged": {
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  },
+  "source_AET_predictions": "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/.paola-optimization/analysis/results/development_error_check_20261017_181534/all_development_predictions.csv",
+  "source_AET_predictions_sha256": "1c4f387853a78a7d87cb907661cd70b44ccfc785b86d9c83cb08fc48a4f67282"
+}

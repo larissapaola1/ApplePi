@@ -1,0 +1,15 @@
+stage,method,MAE
+selection_Jan_May,AET,3.7726330329668785
+selection_Jan_May,Previous fixed blend,3.757325509619305
+selection_Jan_May,Previous optimized graph,3.969493499219631
+selection_Jan_May,graph raw correction,3.984308823273575
+selection_Jan_May,graph selected correction,3.760352242327313
+selection_Jan_May,no_message raw correction,3.8617276533829052
+selection_Jan_May,no_message selected correction,3.749945638361112
+confirmation_Jun_Aug,AET,4.224641488360218
+confirmation_Jun_Aug,Previous fixed blend,4.205745131056596
+confirmation_Jun_Aug,Previous optimized graph,4.344014443410185
+confirmation_Jun_Aug,graph raw correction,4.338459818191736
+confirmation_Jun_Aug,graph selected correction,4.216234277092197
+confirmation_Jun_Aug,no_message raw correction,4.275481523835358
+confirmation_Jun_Aug,no_message selected correction,4.206803615375334

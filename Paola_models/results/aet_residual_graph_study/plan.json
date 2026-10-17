@@ -1,0 +1,85 @@
+{
+  "candidate_configs": {
+    "graph": {
+      "hidden": 16,
+      "epochs": 80,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.01,
+      "dropout": 0.15,
+      "correction_penalty": 0.02,
+      "target_scale": 5.0,
+      "seed": 42,
+      "threads": 4,
+      "graph": true
+    },
+    "no_message": {
+      "hidden": 16,
+      "epochs": 80,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.01,
+      "dropout": 0.15,
+      "correction_penalty": 0.02,
+      "target_scale": 5.0,
+      "seed": 42,
+      "threads": 4,
+      "graph": false
+    }
+  },
+  "correction_strengths": [
+    0,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "teacher_config": {
+    "name": "final",
+    "baseline": "pchip",
+    "basis": "poly",
+    "model": "lgbm_coef",
+    "model_params": {
+      "learning_rate": 0.05,
+      "num_leaves": 15,
+      "min_data_in_leaf": 100
+    },
+    "num_boost_round": 500,
+    "features": {
+      "history": true,
+      "cross_zone": true,
+      "prev_day_edge": true,
+      "volatility_history": false
+    },
+    "residual_scale": 0.8,
+    "recency_halflife_days": null,
+    "memory": null,
+    "shrinkage": null,
+    "zones": [
+      "ZONE_0",
+      "ZONE_1",
+      "ZONE_2",
+      "ZONE_3"
+    ],
+    "seed": 42
+  },
+  "teacher_oof_start": "2025-11-01",
+  "teacher_rule": "fit official AET through preceding month end; predict all valid next-month dates",
+  "outer_training_rule": "correction labels and scalers only from OOF dates through the outer training cutoff",
+  "selection_folds": [
+    "m2026_01",
+    "m2026_02",
+    "m2026_03",
+    "m2026_04",
+    "m2026_05"
+  ],
+  "confirmation_folds": [
+    "m2026_06",
+    "m2026_07",
+    "m2026_08"
+  ],
+  "selection_rule": "minimum Jan-May price MAE per candidate; ties prefer smaller correction, including zero",
+  "no_confirmation_retuning": true,
+  "no_September_or_October_scoring": true,
+  "limitations": "previously inspected development dates; one seed; not an independent final test"
+}

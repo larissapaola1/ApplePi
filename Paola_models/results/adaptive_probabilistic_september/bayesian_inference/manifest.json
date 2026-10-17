@@ -1,0 +1,13 @@
+{
+  "data_cutoff": "2026-08-31",
+  "weight_cutoff": "2026-08-17",
+  "checks": {
+    "rows": 4608,
+    "hours": 1152,
+    "max_abs_mean_error": 2.5011104298755527e-11
+  },
+  "intervals": "empirically calibrated marginal 90%; no coverage guarantee under shift",
+  "scenarios": "raw Bayesian predictive draws; hourly means preserved; not conformally adjusted",
+  "negative_probabilities": "raw model probabilities, not separately calibrated",
+  "graph": "learned attention, source to target; not causal trade flows"
+}

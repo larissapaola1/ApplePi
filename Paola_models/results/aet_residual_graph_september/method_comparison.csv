@@ -1,0 +1,5 @@
+method,MAE_EUR_MWh,change_vs_AET_pct
+AET,5.044273575614974,0.0
+Previous 25% graph / 75% AET blend,4.99793898887743,-0.9185581638857632
+AET + graph error correction,5.061247500292882,0.3364988917326617
+AET + correction without graph messages,5.052134099752365,0.15583064676329972

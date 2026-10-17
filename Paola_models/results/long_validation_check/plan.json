@@ -1,0 +1,96 @@
+{
+  "scenarios": [
+    {
+      "name": "train_3_months",
+      "train_end": "2025-12-31",
+      "validation_start": "2026-01-01",
+      "validation_end": "2026-08-31"
+    },
+    {
+      "name": "train_6_months",
+      "train_end": "2026-03-31",
+      "validation_start": "2026-04-01",
+      "validation_end": "2026-08-31"
+    },
+    {
+      "name": "train_9_months",
+      "train_end": "2026-06-30",
+      "validation_start": "2026-07-01",
+      "validation_end": "2026-08-31"
+    }
+  ],
+  "original_graph": {
+    "hidden": 32,
+    "blocks": 2,
+    "epochs": 80,
+    "batch_days": 16,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "dropout": 0.1,
+    "seed": 42,
+    "threads": 4,
+    "graph": true,
+    "target_scale": 10.0,
+    "cross_zone": false,
+    "loss": "price",
+    "residual_scale": 1.0,
+    "local_skip": false
+  },
+  "optimized_graph": {
+    "hidden": 24,
+    "blocks": 1,
+    "epochs": 120,
+    "batch_days": 16,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "dropout": 0.1,
+    "seed": 42,
+    "threads": 4,
+    "graph": true,
+    "target_scale": 10.0,
+    "cross_zone": true,
+    "loss": "coefficient",
+    "residual_scale": 0.8,
+    "local_skip": true
+  },
+  "AET": {
+    "name": "final",
+    "baseline": "pchip",
+    "basis": "poly",
+    "model": "lgbm_coef",
+    "model_params": {
+      "learning_rate": 0.05,
+      "num_leaves": 15,
+      "min_data_in_leaf": 100
+    },
+    "num_boost_round": 500,
+    "features": {
+      "history": true,
+      "cross_zone": true,
+      "prev_day_edge": true,
+      "volatility_history": false
+    },
+    "residual_scale": 0.8,
+    "recency_halflife_days": null,
+    "memory": null,
+    "shrinkage": null,
+    "zones": [
+      "ZONE_0",
+      "ZONE_1",
+      "ZONE_2",
+      "ZONE_3"
+    ],
+    "seed": 42
+  },
+  "graph_blend_weight": 0.25,
+  "fixed_common_window": [
+    "2026-07-01",
+    "2026-08-31"
+  ],
+  "history_modes": [
+    "strictly earlier dates revealed daily",
+    "training data only on common July-Aug window"
+  ],
+  "no_early_stopping_no_tuning": true,
+  "limitation": "Previously inspected official development dates, not an untouched final test."
+}

@@ -1,0 +1,165 @@
+{
+  "choice": {
+    "point_candidate": "clustered_bayesian",
+    "probabilistic_candidate": "clustered_bayesian",
+    "blend_graph_weight": 0.1,
+    "blend_trials": [
+      {
+        "graph_weight": 0,
+        "selection_MAE": 3.7726330329668785
+      },
+      {
+        "graph_weight": 0.1,
+        "selection_MAE": 3.768149148001028
+      },
+      {
+        "graph_weight": 0.25,
+        "selection_MAE": 3.7718807899046984
+      },
+      {
+        "graph_weight": 0.5,
+        "selection_MAE": 3.8040347881788024
+      },
+      {
+        "graph_weight": 1,
+        "selection_MAE": 3.9610648257270977
+      }
+    ]
+  },
+  "stage_scores": [
+    {
+      "stage": "selection_Jan_May",
+      "method": "AET",
+      "MAE": 3.7726330329668785
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "Previous optimized graph",
+      "MAE": 3.969493499219631
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "Previous fixed blend",
+      "MAE": 3.757325509619305
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "adaptive_point",
+      "MAE": 3.9771389062483706
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "clustered_point",
+      "MAE": 4.015756363021982
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "clustered_bayesian",
+      "MAE": 3.9610648257270977
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "no_message_bayesian",
+      "MAE": 3.955451566193744
+    },
+    {
+      "stage": "selection_Jan_May",
+      "method": "New selected blend",
+      "MAE": 3.768149148001028
+    },
+    {
+      "stage": "confirmation_Jun_Aug",
+      "method": "AET",
+      "MAE": 4.224641488360218
+    },
+    {
+      "stage": "confirmation_Jun_Aug",
+      "method": "Previous optimized graph",
+      "MAE": 4.344014443410185
+    },
+    {
+      "stage": "confirmation_Jun_Aug",
+      "method": "Previous fixed blend",
+      "MAE": 4.205745131056596
+    },
+    {
+      "stage": "confirmation_Jun_Aug",
+      "method": "clustered_bayesian",
+      "MAE": 4.335854774477775
+    },
+    {
+      "stage": "confirmation_Jun_Aug",
+      "method": "New selected blend",
+      "MAE": 4.2195374810387
+    }
+  ],
+  "uncertainty_by_zone": [
+    {
+      "market_id": "ZONE_0",
+      "raw90_coverage": 0.8303179824561403,
+      "calibrated90_coverage": 0.9089912280701754,
+      "mean_interval_width": 14.367768428119007,
+      "interval_score90": 19.816880787218942,
+      "CRPS": 2.469122635308156,
+      "whole_zone_day_inside": 0.0
+    },
+    {
+      "market_id": "ZONE_1",
+      "raw90_coverage": 0.7606907894736842,
+      "calibrated90_coverage": 0.8769188596491228,
+      "mean_interval_width": 20.29547008267443,
+      "interval_score90": 33.025993306399705,
+      "CRPS": 3.86180912090711,
+      "whole_zone_day_inside": 0.02631578947368421
+    },
+    {
+      "market_id": "ZONE_2",
+      "raw90_coverage": 0.7615131578947368,
+      "calibrated90_coverage": 0.8824013157894737,
+      "mean_interval_width": 18.449660108428702,
+      "interval_score90": 26.432418243746007,
+      "CRPS": 3.2171077554825387,
+      "whole_zone_day_inside": 0.0
+    },
+    {
+      "market_id": "ZONE_3",
+      "raw90_coverage": 0.8352521929824561,
+      "calibrated90_coverage": 0.9029605263157895,
+      "mean_interval_width": 20.82632056542125,
+      "interval_score90": 31.882862258789345,
+      "CRPS": 3.5521498969593694,
+      "whole_zone_day_inside": 0.0
+    }
+  ],
+  "original_artifacts_unchanged": {
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/artifacts/through_august/scaler.npz": "d2910b3e3edda8a3897234d5694a22ce4cb26a1d9c4a27061e55f8c9c073c8cb",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/artifacts/through_august/weights.pt": "7a70f63704652fdc2441e83b73f3484f8876eb0b40e0fca5c6c7805a829fbb02",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/artifacts/through_august/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/artifacts/through_august/manifest.json": "7946f204e4af871a610122eeb280deb7a4925f959afad3350361c71a15f4e33b",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/manifest.json": "a74635b6d7090801902e84708362061ccd6ef1ebe01bb785dbb55c1e754c56b5",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/scaler.npz": "9a32326219d06fbdcfc7e2bb5ba9fa75bf6dae9e581ca3849c4655f3c965308d",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/weights.pt": "911397b2ef29d627f9c594ab7dfe40ba4bbac9b6271ff1deb5a560d7ac740830",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/history.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/graph/manifest.json": "ba13dea0617362d4517a9fc3d0b0f8da83689a1c0857fb07232bdb9a5966d2f2",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/Paola_models/results/aet_informed_optimization/selected_blend_through_august/aet/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  },
+  "September_scored": false,
+  "new_model_promoted": false,
+  "attention_orientation": "row=target/receiver, column=source/sender",
+  "uncertainty_scope": "variational output weights and graph offsets; deterministic feature encoder; Student-t coefficient likelihood plus auxiliary MAE",
+  "interval_scope": "calibrated marginal intervals; no time-series coverage guarantee"
+}

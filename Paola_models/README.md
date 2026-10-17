@@ -4,10 +4,65 @@ An isolated experimental spatiotemporal graph neural network, trained from scrat
 official challenge price file. Existing `AET-HACKATHON` models, artifacts, and configs are unchanged.
 Run all commands below from the **ApplePi root**.
 
+[Summary of all Paola model experiments, MAEs and possible improvements](MODEL_SUMMARY_AND_IMPROVEMENTS.md).
+
+**AET + out-of-fold error correction is integrated:** a separate small network predicts AET's
+remaining quarter-price errors. On **June–August confirmation**, AET scores **4.22464**, AET +
+graph correction **4.21623**, and AET + matched no-message correction **4.20680 EUR/MWh**.
+Both correction strengths were selected as 0.25 on January–May. The previous fixed blend
+remains slightly better at **4.20575**. The selected no-message variant's 0.422% gain misses
+the 0.5% promotion threshold; graph messages do not show an added benefit in this run.
+The integrated artifacts are saved separately through August. Their subsequent frozen
+**September 19–30 assessment** scores **5.06125** with graph messages and **5.05213** without,
+versus AET **5.04427**. Their small development gains do not carry over to this September block.
+[September assessment](results/aet_residual_graph_september/assessment_results.md).
+[Architecture and inference commands](AET_RESIDUAL_GRAPH.md) ·
+[Results](results/aet_residual_graph_study/residual_results.md) ·
+[Interpretation](results/aet_residual_graph_study/interpretation.md).
+
+**Adaptive probabilistic graph study:** directed dynamic attention, regime clustering, partial
+Bayesian weights/edges, calibrated intervals, and neighbor-removal diagnostics are implemented
+separately from the original graph. See [architecture, interpretation and commands](PROBABILISTIC_GRAPH.md),
+[all candidate results](results/adaptive_probabilistic_study/advanced_results.md), and the
+[offline interactive graph explorer](results/adaptive_probabilistic_study/graph_explorer.html).
+The explorer describes learned relationships between anonymous zones, not identified countries or causal trade flows.
+On the same **June–August confirmation dates**, the new graph scores **4.33585**, AET **4.22464**,
+new 10% graph blend **4.21954**, and previous 25% graph blend **4.20575 EUR/MWh**.
+The new graph is not promoted. Calibrated marginal 90% intervals cover **89.28%** with average
+width **18.48 EUR/MWh**. [Interpretation and next steps](results/adaptive_probabilistic_study/interpretation.md).
+
+**New frozen September 19–30 assessment:** Bayesian graph **5.11651**, its preselected 10% graph
+blend **5.03028**, AET **5.04427**, and previous 25% graph blend **4.99794 EUR/MWh**.
+The Bayesian graph improves on the previous standalone graph (**5.32305**) by 3.88%, while the
+previous blend remains best. No retraining, recalibration or September tuning occurred.
+[September report and zone results](results/adaptive_probabilistic_september/assessment_results.md).
+
+**Latest assessment:** the already selected **25% optimized graph / 75% AET hybrid** achieves
+**4.99794 EUR/MWh MAE** on September 19–30, versus AET **5.04427**. The optimized graph alone
+scores **5.32305**. The below-5 result belongs to the hybrid and is only narrowly below 5.
+The architecture and blend weight were fixed using earlier development dates; no September tuning
+or new model fitting occurred. [Full comparison and inference command](results/frozen_hybrid_september/below_5_results.md).
+The optimization has now been restored directly into this `Paola_models/` folder on **Paola**;
+the earlier temporary checkout has not been recreated. [Optimization details](OPTIMIZATION.md).
+
+**Shorter-training / longer-validation check:** training on 91 dates and validating on every
+available January–August date (242 dates) gives original graph **5.117**, optimized graph **4.327**,
+AET **3.991**, and fixed blend **3.973 EUR/MWh**. Two later-cutoff tests show the same ranking.
+The original graph fits training more closely but generalizes worse than the optimized graph;
+the blend's improvement over AET stays small (0.27%–0.46%). These are different periods from the
+September assessment, and previously inspected data, not a new untouched test.
+[Findings and overfitting interpretation](results/long_validation_check/findings.md).
+
 **First experiment:** TGNN **4.2611 EUR/MWh** versus LightGBM **3.9479**, on the same eight
 Jan–Aug folds. TGNN was **7.93% worse** and won **0/8** folds; keep LightGBM as the incumbent.
 See [the comparison and monthly results](results/tgnn_80epochs/results.md).
 This is an implemented and tested research candidate, not an improved replacement.
+
+**September 19–30 assessment:** the original graph scores **5.7418 EUR/MWh**, versus AET's
+**5.0443**, on the same 12 dates and four equally weighted zones. Its error is **13.83% higher**.
+Both saved models were trained through August; this assessment involved no retraining or tuning.
+These September scores are distinct from the January–August validation scores above.
+See [the September assessment results](results/september_19_30_assessment/assessment_results.md).
 
 ## What it does
 

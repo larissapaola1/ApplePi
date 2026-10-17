@@ -1,0 +1,78 @@
+{
+  "candidates": {
+    "aet_features": {
+      "hidden": 32,
+      "blocks": 2,
+      "epochs": 80,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "price",
+      "residual_scale": 1.0,
+      "local_skip": false
+    },
+    "aet_loss_shrink": {
+      "hidden": 32,
+      "blocks": 2,
+      "epochs": 80,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "coefficient",
+      "residual_scale": 0.8,
+      "local_skip": false
+    },
+    "compact_local": {
+      "hidden": 24,
+      "blocks": 1,
+      "epochs": 120,
+      "batch_days": 16,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "dropout": 0.1,
+      "seed": 42,
+      "threads": 4,
+      "graph": true,
+      "target_scale": 10.0,
+      "cross_zone": true,
+      "loss": "coefficient",
+      "residual_scale": 0.8,
+      "local_skip": true
+    }
+  },
+  "graph_blend_weights": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "selection_folds": [
+    "m2026_01",
+    "m2026_02",
+    "m2026_03",
+    "m2026_04",
+    "m2026_05"
+  ],
+  "confirmation_folds": [
+    "m2026_06",
+    "m2026_07",
+    "m2026_08"
+  ],
+  "rule": "minimum Jan-May official MAE, including original graph; ties prefer original",
+  "blend_rule": "minimum Jan-May MAE; ties prefer lower graph weight",
+  "no_retuning_after_confirmation": true,
+  "limitation": "All development months have been inspected; confirmation is not untouched."
+}

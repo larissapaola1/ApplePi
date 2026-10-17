@@ -1,0 +1,13 @@
+file,column,rows,hours,max_abs_mean_error
+confirmation_Jun_Aug_graph_predictions.csv.gz,raw_corrected_prediction,14592,3648,1.1368683772161603e-13
+confirmation_Jun_Aug_graph_predictions.csv.gz,selected_prediction,14592,3648,1.1368683772161603e-13
+confirmation_Jun_Aug_no_message_predictions.csv.gz,raw_corrected_prediction,14592,3648,1.1368683772161603e-13
+confirmation_Jun_Aug_no_message_predictions.csv.gz,selected_prediction,14592,3648,1.1368683772161603e-13
+selection_Jan_May_graph_predictions.csv.gz,raw_corrected_prediction,23040,5760,5.684341886080802e-14
+selection_Jan_May_graph_predictions.csv.gz,selected_prediction,23040,5760,5.684341886080802e-14
+selection_Jan_May_no_message_predictions.csv.gz,raw_corrected_prediction,23040,5760,5.684341886080802e-14
+selection_Jan_May_no_message_predictions.csv.gz,selected_prediction,23040,5760,5.684341886080802e-14
+selection_graph_predictions.csv.gz,raw_corrected_prediction,23040,5760,5.684341886080802e-14
+selection_graph_predictions.csv.gz,predicted_price_eur_mwh,23040,5760,5.684341886080802e-14
+selection_no_message_predictions.csv.gz,raw_corrected_prediction,23040,5760,5.684341886080802e-14
+selection_no_message_predictions.csv.gz,predicted_price_eur_mwh,23040,5760,5.684341886080802e-14

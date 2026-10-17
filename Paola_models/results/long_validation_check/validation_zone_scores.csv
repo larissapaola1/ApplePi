@@ -1,0 +1,61 @@
+scenario,method,market_id,MAE
+train_3_months,AET,ZONE_0,3.2310345501354734
+train_3_months,AET,ZONE_1,4.5601244030927495
+train_3_months,AET,ZONE_2,3.6733973939268454
+train_3_months,AET,ZONE_3,4.4984136159291594
+train_3_months,Fixed blend,ZONE_0,3.183281233121906
+train_3_months,Fixed blend,ZONE_1,4.514525165718408
+train_3_months,Fixed blend,ZONE_2,3.710787255467554
+train_3_months,Fixed blend,ZONE_3,4.481717416002926
+train_3_months,Flat,ZONE_0,7.950636621900826
+train_3_months,Flat,ZONE_1,9.468021048553718
+train_3_months,Flat,ZONE_2,5.543317407024793
+train_3_months,Flat,ZONE_3,7.471837551652892
+train_3_months,Optimized TGNN,ZONE_0,3.489973479021858
+train_3_months,Optimized TGNN,ZONE_1,4.7721379663791295
+train_3_months,Optimized TGNN,ZONE_2,4.239190216998636
+train_3_months,Optimized TGNN,ZONE_3,4.805237434995897
+train_3_months,Original TGNN,ZONE_0,4.463932557515094
+train_3_months,Original TGNN,ZONE_1,6.014534295950621
+train_3_months,Original TGNN,ZONE_2,4.343668120387686
+train_3_months,Original TGNN,ZONE_3,5.645626508456632
+train_6_months,AET,ZONE_0,3.1147645616061856
+train_6_months,AET,ZONE_1,4.451881025995413
+train_6_months,AET,ZONE_2,4.157465839404984
+train_6_months,AET,ZONE_3,4.381026207919504
+train_6_months,Fixed blend,ZONE_0,3.080532532618007
+train_6_months,Fixed blend,ZONE_1,4.432596108168159
+train_6_months,Fixed blend,ZONE_2,4.163240708649397
+train_6_months,Fixed blend,ZONE_3,4.373305306217698
+train_6_months,Flat,ZONE_0,8.77515012254902
+train_6_months,Flat,ZONE_1,9.950634191176471
+train_6_months,Flat,ZONE_2,6.260305010893246
+train_6_months,Flat,ZONE_3,7.9011526416122
+train_6_months,Optimized TGNN,ZONE_0,3.358565767752543
+train_6_months,Optimized TGNN,ZONE_1,4.706945805264997
+train_6_months,Optimized TGNN,ZONE_2,4.388886999974796
+train_6_months,Optimized TGNN,ZONE_3,4.682440537285534
+train_6_months,Original TGNN,ZONE_0,3.773531132171819
+train_6_months,Original TGNN,ZONE_1,4.945229120554996
+train_6_months,Original TGNN,ZONE_2,4.380729490596391
+train_6_months,Original TGNN,ZONE_3,4.95915676929233
+train_9_months,AET,ZONE_0,2.7297870457762055
+train_9_months,AET,ZONE_1,4.628505309019752
+train_9_months,AET,ZONE_2,4.667428241889002
+train_9_months,AET,ZONE_3,3.988487941510513
+train_9_months,Fixed blend,ZONE_0,2.741605558359244
+train_9_months,Fixed blend,ZONE_1,4.598435261130331
+train_9_months,Fixed blend,ZONE_2,4.652807280739088
+train_9_months,Fixed blend,ZONE_3,3.9788924489494
+train_9_months,Flat,ZONE_0,7.933563508064516
+train_9_months,Flat,ZONE_1,9.825423387096773
+train_9_months,Flat,ZONE_2,6.680688004032258
+train_9_months,Flat,ZONE_3,8.34511928763441
+train_9_months,Optimized TGNN,ZONE_0,3.078147254979585
+train_9_months,Optimized TGNN,ZONE_1,4.799881037931235
+train_9_months,Optimized TGNN,ZONE_2,4.7618957477068244
+train_9_months,Optimized TGNN,ZONE_3,4.263888467843128
+train_9_months,Original TGNN,ZONE_0,3.3852811224567687
+train_9_months,Original TGNN,ZONE_1,4.8684738337156235
+train_9_months,Original TGNN,ZONE_2,4.873451749471636
+train_9_months,Original TGNN,ZONE_3,4.422107141992695
