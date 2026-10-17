@@ -5,3 +5,7 @@ scikit-learn
 catboost
 ipython
 ipykernel
+torch
+tabm==0.0.3
+lightgbm==4.7.0
+joblib
