@@ -1,7 +1,7 @@
 """Understanding the Model page: why the model predicts what it does.
 
 1. What the model relies on overall: split gain of the three LightGBM models, grouped into plain categories.
-2. One prediction, step by step: hourly price -> smooth curve -> slope -> curvature -> zigzag -> result.
+2. One prediction, step by step: hourly price -> smooth curve -> slope -> curvature -> zigzag -> rules -> result.
 3. When to trust it: the risk labels of the selected day.
 
 Zone, day and hour are shared with the Model Results page: clicking a point there opens this page with that
@@ -136,7 +136,8 @@ def one_prediction(quarters: pd.DataFrame, hours_all: pd.DataFrame, c: dict):
     st.subheader("One prediction, step by step")
     st.markdown("<div class='section-sub'>Pick any zone, day and hour, or click a point on the Model Results page. "
                 "The prediction starts from the hourly price, adds the smooth curve shape, then the three learned "
-                "shapes.</div>", unsafe_allow_html=True)
+                "shapes; fixed rules then align zones with (nearly) equal hourly prices and keep each quarter on the "
+                "same side of zero as its hour.</div>", unsafe_allow_html=True)
     zones = sorted(quarters.market_id.unique())
     st.session_state.setdefault("explain_zone", zones[0])
     with st.container(border=True):

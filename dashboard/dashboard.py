@@ -81,8 +81,9 @@ PART_LABELS = {
     "slope": "Slope: rising or falling inside the hour",
     "curvature": "Curvature: edges vs middle",
     "zigzag": "Zigzag: alternating detail",
+    "rules": "Rules: connected zones aligned, quarters keep the hour's sign",
 }
-SHORT_LABELS = {"smooth": "Smooth", "slope": "Slope", "curvature": "Curve", "zigzag": "Zigzag"}
+SHORT_LABELS = {"smooth": "Smooth", "slope": "Slope", "curvature": "Curve", "zigzag": "Zigzag", "rules": "Rules"}
 RISK_REASONS = {   # the strongest of the three risk signals, in plain words
     "hourly_slope": "the hourly price changes sharply around this hour",
     "daily_std": "prices swing a lot during this day",
@@ -90,12 +91,15 @@ RISK_REASONS = {   # the strongest of the three risk signals, in plain words
 }
 
 # Validated with the dataviz palette checker (adjacent and all-pairs, light and dark).
-# Hourly price red, smooth curve blue, final model green; learned parts yellow / violet / magenta.
+# Hourly price red, smooth curve blue, final model green; learned parts yellow / violet / magenta;
+# the fixed post-processing rules use the neutral secondary ink (not a categorical hue).
 PALETTES = {
     "light": dict(hourly="#e34948", smooth="#2a78d6", model="#008300", slope="#eda100", curvature="#6250d6",
-                  zigzag="#e87ba4", ink="#0b0b0b", ink2="#52514e", grid="#e1e0d9", axis="#c3c2b7", surface="#fcfcfb"),
+                  zigzag="#e87ba4", rules="#52514e", ink="#0b0b0b", ink2="#52514e", grid="#e1e0d9", axis="#c3c2b7",
+                  surface="#fcfcfb"),
     "dark": dict(hourly="#e66767", smooth="#3987e5", model="#008300", slope="#c98500", curvature="#9085e9",
-                 zigzag="#d55181", ink="#f0efec", ink2="#c3c2b7", grid="#2c2c2a", axis="#383835", surface="#1a1a19"),
+                 zigzag="#d55181", rules="#c3c2b7", ink="#f0efec", ink2="#c3c2b7", grid="#2c2c2a", axis="#383835",
+                 surface="#1a1a19"),
 }
 RISK_COLOURS = {"high": "#fab219"}   # status palette: warning (red is taken by the hourly price)
 BETTER, WORSE = "#16c45a", "#ef4444"  # bright arrow icons for "vs flat"; the words beside them carry the meaning
@@ -133,8 +137,10 @@ def train_csv_path() -> Path:
 def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray):
     """H [zone, 24] -> (store, baseline [zone,24,4], {component: [zone,24,4]}, final [zone,24,4]).
 
-    final = baseline + residual_scale * sum_j coefficient_j * basis_j, followed by the pipeline's
-    exact hourly-mean projection; the components are the learned correction split per basis vector.
+    final = baseline + residual_scale * sum_j coefficient_j * basis_j, then the pipeline's fixed
+    post-processing (zone coupling, partial tie, sign floor/ceiling) and exact hourly-mean projection.
+    The components are the learned correction split per basis vector plus "rules", the remainder
+    added by post-processing, so baseline + all components = final.
     """
     H1 = H[None]
     base = pipe.baseline(H1)
@@ -145,6 +151,7 @@ def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray)
     parts = {name: (scale * coefficients[:, [j]] * pipe.basis[:, j][None, :]).reshape(H.shape + (4,))
              for j, name in enumerate(COMPONENTS)}
     final, _ = pipe.predict_day(day, H, history)
+    parts["rules"] = final - base[0] - sum(parts.values())
     return store, base[0], parts, final
 
 
@@ -347,7 +354,7 @@ def zones_chart(rows: pd.DataFrame, hours: pd.DataFrame, show: dict, show_risk: 
 
 def decomposition_chart(hour_rows: pd.DataFrame, c: dict) -> go.Figure:
     """One small waterfall per quarter: hourly price -> + each part -> prediction, with the actual price."""
-    steps = ["smooth", *COMPONENTS]
+    steps = ["smooth", *COMPONENTS, "rules"]
     # Four quarters side by side; step labels are tilted so they stay large in the narrow panels.
     fig = make_subplots(rows=1, cols=4, shared_yaxes=True, horizontal_spacing=0.03,
                         subplot_titles=[f"Q{q} · :{(q - 1) * 15:02d}–:{q * 15 % 60:02d}" for q in range(1, 5)])
@@ -569,7 +576,7 @@ def pick_hour(rows: pd.DataFrame, dates: list[str]) -> tuple[str, int]:
 def explain_reading(hour_rows: pd.DataFrame) -> None:
     error = (hour_rows.model - hour_rows.actual).abs().mean()
     st.markdown("**How to read it.** Each 15-minute price starts from the hourly price (red line). "
-                f"The bars add four parts to it; the result is the {MODEL_LABEL.lower()} (◆), "
+                f"The bars add five parts to it; the result is the {MODEL_LABEL.lower()} (◆), "
                 "compared with the actual price (●).")
     chance_html = ""
     if has_range(hour_rows):
