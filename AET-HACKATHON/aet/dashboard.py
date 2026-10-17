@@ -262,7 +262,9 @@ def decomposition_chart(hour_rows: pd.DataFrame, c: dict) -> go.Figure:
     fig.update_layout(barmode="overlay", bargap=0.35)
     fig = _style(fig, c, 560)
     fig.update_layout(margin=dict(t=40, b=40), legend=dict(yanchor="top", y=-0.22))
-    fig.update_xaxes(tickangle=-40)
+    labels = [SHORT_LABELS[step] for step in steps] + ["Result"]
+    fig.update_xaxes(tickangle=-40, tickmode="array", tickvals=labels,
+                     ticktext=[*labels[:-1], "<b>Result</b>"])
     return fig
 
 
@@ -293,8 +295,10 @@ def score_cards(rows: pd.DataFrame, hours: pd.DataFrame) -> None:
     cols = st.columns(4)
     cols[0].metric("Flat hourly price", f"{flat:.2f} €/MWh",
                    help="The hourly price repeated for all four quarters: the reference to beat (official metric).")
-    cols[1].metric("Smooth curve", f"{smooth:.2f} €/MWh", f"{(smooth / flat - 1) * 100:.0f}% vs flat", delta_color="inverse")
-    cols[2].metric("Final model", f"{model:.2f} €/MWh", f"{(model / flat - 1) * 100:.0f}% vs flat", delta_color="inverse")
+    cols[1].metric("Smooth curve", f"{smooth:.2f} €/MWh", f"{(smooth / flat - 1) * 100:.0f}% vs flat", delta_color="inverse",
+                   help="A smooth estimate of the four 15-minute prices, built from the hourly averages.")
+    cols[2].metric("Final model", f"{model:.2f} €/MWh", f"{(model / flat - 1) * 100:.0f}% vs flat", delta_color="inverse",
+                   help="The smooth curve plus corrections learned from historical 15-minute prices.")
     cols[3].metric("High-risk hours", f"{int((hours.risk_label == 'high').sum())} of {len(hours)}",
                    help="Hours where the model deserves extra caution (heuristic).")
 
