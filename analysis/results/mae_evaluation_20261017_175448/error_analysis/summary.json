@@ -1,0 +1,14 @@
+{
+  "MAE": 5.044273575614974,
+  "median_absolute_error": 3.0372772715000025,
+  "p90_absolute_error": 11.639013917389999,
+  "p95_absolute_error": 16.679901287870006,
+  "max_absolute_error": 90.59706558089997,
+  "worst_5pct_error_share_pct": 25.916429562828405,
+  "within_1": 22.135416666666664,
+  "within_5": 66.68836805555556,
+  "within_10": 86.71875,
+  "within_20": 96.6796875,
+  "dates_better_than_flat": 12,
+  "mean_range_bias": -1.5700163234163191
+}

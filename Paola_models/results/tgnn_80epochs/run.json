@@ -1,0 +1,69 @@
+{
+  "config": {
+    "hidden": 32,
+    "blocks": 2,
+    "epochs": 80,
+    "batch_days": 16,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "dropout": 0.1,
+    "seed": 42,
+    "threads": 4,
+    "graph": true,
+    "target_scale": 10.0
+  },
+  "torch": "2.9.1",
+  "numpy": "2.1.3",
+  "pandas": "2.2.3",
+  "timings": [
+    {
+      "fold": "m2026_01",
+      "seconds": 9.740573207993293
+    },
+    {
+      "fold": "m2026_02",
+      "seconds": 10.417304833012167
+    },
+    {
+      "fold": "m2026_03",
+      "seconds": 12.272724250011379
+    },
+    {
+      "fold": "m2026_04",
+      "seconds": 14.550632208003663
+    },
+    {
+      "fold": "m2026_05",
+      "seconds": 16.78623291599797
+    },
+    {
+      "fold": "m2026_06",
+      "seconds": 18.311705625004834
+    },
+    {
+      "fold": "m2026_07",
+      "seconds": 21.444801958015887
+    },
+    {
+      "fold": "m2026_08",
+      "seconds": 22.705520832998445
+    }
+  ],
+  "relative_improvement_vs_incumbent": -0.0793254658478697,
+  "folds_won": 0,
+  "worst_zone_degradation": 0.14757424487831372,
+  "promotion_gate_passed": false,
+  "artifact_hashes_unchanged": {
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/history_store.npz": "ce956cbf1c050afbd35ccc8f1948e1ccd3d0652c9cd1c951b0d94328493b05fc",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/manifest.json": "cdf569c7c7ac92ed5a7b19d0cc22c7f4ad8843104b8b550319a360569d26b821",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_1.txt": "a087fdae44a93084acc2aeeecbf343220f87a0b8b36cf31015398d4223a356af",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_0.txt": "b1a71678a467dfb962a7c3de44a882221f552d16652448cca3438c70482e9e68",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_official/lgbm_coef_2.txt": "44891700cd2bfa4a5631ef692c0538eceddbe8ad619a3ab7295f0b0a6e9d98c1",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/history_store.npz": "5ebda1c82e29c58f7d4c692dbca8f7f395bbf97d5b667afb343549a72191447a",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/manifest.json": "f0d4c766da1e4abcab2d4f322aa42bf8d9e186e257947493d0affd41a4900315",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_1.txt": "573dbbaa4948c9bccab86915b52d6d15e7193e409dc6a9de54083fb8b11a477b",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_0.txt": "1311431d8ffe2ce89707dc3ec02fd662fca870400c1010e713204f467a4e0084",
+    "/Users/paolalarissahernandezllamas/Documents/Documentos - Paola\u2019s MacBook Pro/Fall 26/ApplePi/AET-HACKATHON/artifacts_september_assessment/lgbm_coef_2.txt": "1eeb4a056206d215b50088e58525c415fba10227da9ed766ce69da4e895f514e"
+  },
+  "validation_max_mean_error": 1.1368683772161603e-13
+}
