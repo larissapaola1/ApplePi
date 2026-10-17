@@ -5,6 +5,13 @@ hourly average within 0.0001 EUR/MWh. This is constrained reconstruction, not ho
 
 The only data source is the official participant package; place it in data/ (see [data/README.md](data/README.md)).
 
+## Team ApplePi
+
+- Cristina Fernández-Simal Bernard
+- Paola Hernandez Llamas
+- Andrea Mero Plaza
+- Laura Jimena Tagle Muñoz
+
 ## Current model and evidence
 
 The current configuration (I3) and supplied `artifacts_official/` use:
