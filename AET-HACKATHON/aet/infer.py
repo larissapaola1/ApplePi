@@ -1,7 +1,7 @@
 """Offline inference entry point for the jury. No network, no refitting.
 
     python -m aet.infer --hourly test_hourly.csv --history history_15min.csv \
-                        --model artifacts --out predictions.csv
+                        --model artifacts_official --out predictions.csv
 
 The jury's history is merged over the training prices stored in the artifacts
 (jury values win), then fed to rules that were frozen at training time.
@@ -26,23 +26,26 @@ log = logging.getLogger("aet.infer")
 
 def run(hourly_path, history_path, model_dir, out_path) -> dict:
     started = time.perf_counter()
-    pipe, stored = ShapePipeline.load(model_dir)
+    # A valid hourly reference is indispensable: do not invent prices or keys when it is invalid.
     hourly = read_hourly(hourly_path)
-    history = stored
-    if history_path:
-        jury = read_quarter_hourly(history_path, strict=False)
-        history = stored.merge(QuarterCube.from_long(jury, pipe.zones))
+    candidate = "unavailable"
     try:
+        pipe, stored = ShapePipeline.load(model_dir)
+        candidate = pipe.config.name
+        history = stored
+        if history_path:
+            jury = read_quarter_hourly(history_path, strict=False)
+            history = stored.merge(QuarterCube.from_long(jury, pipe.zones))
         pred, diag = pipe.predict_frame(hourly, history)
         validate_predictions(pred, hourly)
-    except Exception:  # no automatic correction exists: never leave the jury without a valid file
+    except Exception as exc:
         log.exception("reconstruction failed; writing the flat baseline so the output stays compliant")
-        pred, diag = flat_predictions(hourly), {"emergency_flat": True}
+        pred, diag = flat_predictions(hourly), {"emergency_flat": True, "failure_type": type(exc).__name__}
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     pred.to_csv(out_path, index=False, float_format="%.10f")
     report = validate_predictions(pd.read_csv(out_path), hourly)
-    return {"output": str(out_path), "candidate": pipe.config.name, **report, **diag,
+    return {"output": str(out_path), "candidate": candidate, **report, **diag,
             "seconds": round(time.perf_counter() - started, 2)}
 
 

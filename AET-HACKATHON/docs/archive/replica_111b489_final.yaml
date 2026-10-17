@@ -1,0 +1,11 @@
+# The frozen submission (I2, chosen on the development folds; see docs/METHODOLOGY.md section 7).
+#   python -m aet.train --train data/train_prices_15min.csv --config configs/final.yaml --out artifacts
+# The other candidates are references for the one-off locked September report:
+#   python -m aet.backtest --train data/train_prices_15min.csv --config configs/final.yaml \
+#       --folds monthly --include-locked
+extends: core.yaml
+candidates:
+  - {name: final, final: true, residual_scale: 0.8, features: {prev_day_edge: false}}   # = I2
+  - {name: E0_flat, baseline: flat, model: none}
+  - {name: E1_pchip, model: none}
+  - {name: E3_coef_hist}                     # handoff default before the E5 round

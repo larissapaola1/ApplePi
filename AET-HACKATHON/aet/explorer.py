@@ -1,8 +1,8 @@
 """Interactive explorer for the AET quarter-hour price reconstruction.
 
 Run from the project root:
-    PYTHONPATH=/path/to/AET-HACKATHON \
-    /Users/cristinafernandez-simalbernard/Library/Python/3.9/bin/streamlit run aet/explorer.py
+    python -m pip install -r requirements-explorer.txt
+    python -m streamlit run aet/explorer.py
 """
 from __future__ import annotations
 from pathlib import Path
@@ -133,7 +133,7 @@ def main():
     except FileNotFoundError as exc:
         st.error(
             f"Required file not found: {exc}\n\n"
-            "Make sure you run from the project root with artifacts/ and "
+            "Make sure you run from the project root with artifacts_official/ and "
             "results/september_assessment/ present."
         )
         st.stop()

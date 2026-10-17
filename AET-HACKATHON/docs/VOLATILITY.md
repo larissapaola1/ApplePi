@@ -4,11 +4,17 @@ This is separate development research. It does not change `configs/final.yaml`, 
 artifacts, or the required prediction schema. No external inputs, pretrained weights, synthetic
 training examples or September-based model selection are used.
 
+Set `TRAIN_CSV` to the included official file before running these commands:
+
+```bash
+export TRAIN_CSV="data/train_prices_15min.csv"
+```
+
 ## 1. Diagnose extreme hours and validate a simple risk index
 
 ```bash
 python -m aet.volatility diagnose \
-  --train ../ApplePi/Data/train_prices_15min.csv \
+  --train "$TRAIN_CSV" \
   --config configs/final.yaml \
   --out results/official_volatility
 ```
@@ -32,7 +38,7 @@ Read `results/official_volatility/report.md`, `risk_validation.csv`, `regime_sum
 
 ```bash
 python -m aet.backtest \
-  --train ../ApplePi/Data/train_prices_15min.csv \
+  --train "$TRAIN_CSV" \
   --config configs/volatility.yaml \
   --folds monthly --reference incumbent \
   --out results/official_volatility_features
