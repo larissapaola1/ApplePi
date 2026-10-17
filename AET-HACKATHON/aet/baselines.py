@@ -33,10 +33,10 @@ def central_slope(H: np.ndarray) -> np.ndarray:
     return slope
 
 
-def linear_ramp(H: np.ndarray) -> np.ndarray:
+def linear_ramp(H: np.ndarray, scale: float = 1.0) -> np.ndarray:
     """Centred ramp following the central hourly slope; mean-preserving because the offsets sum to zero."""
     H = np.asarray(H, dtype=float)
-    return H[..., None] + central_slope(H)[..., None] * _OFFSETS
+    return H[..., None] + scale * central_slope(H)[..., None] * _OFFSETS
 
 
 _INTERPOLATORS = {
@@ -71,6 +71,7 @@ def cumulative(H: np.ndarray, method: str = "pchip") -> np.ndarray:
 BASELINES: dict[str, Baseline] = {
     "flat": flat,
     "linear": linear_ramp,
+    "linear_x2": partial(linear_ramp, scale=2.0),
     "pchip": partial(cumulative, method="pchip"),
     "akima": partial(cumulative, method="akima"),
     "spline": partial(cumulative, method="spline"),

@@ -18,7 +18,9 @@ The current configuration and supplied `artifacts_official/` use:
 | Method | Official-data development MAE | September backtest MAE |
 |---|---:|---:|
 | Flat | 8.1276 | 10.8988 |
+| Linear ramp ×1 | 5.7580 | — |
 | PCHIP | 5.6185 | 6.9270 |
+| Linear ramp ×2 | 4.8322 | — |
 | Unscaled coefficient model with history | 3.9838 | 5.4270 |
 | Current final | **3.9479** | **5.0444** |
 
@@ -27,6 +29,13 @@ through August, assess 19–30 September. September aggregate EDA had already be
 the block was held out from the subsequent official model comparisons. Exported inference
 scores 5.0442 rather than 5.0444 due to tiny hourly-input rounding differences affecting tree
 branches; both paths improve over flat by approximately 53.7%. See docs/METHODOLOGY.md.
+
+On these development folds, PCHIP improves over flat by 30.87%, slope ×2 by 40.55%,
+and the final model by 51.43%. Final improves over slope ×2 by 18.30%.
+The full-year descriptive EDA uses a different sample (PCHIP approximately 29%);
+do not mix its percentages with this table. Dashes mean no assessment reported here.
+New local-geometry and extrema-distance features did not pass the development promotion
+gate and remain disabled; see [experiment details](docs/GEOMETRY.md).
 
 
 ## Install and test

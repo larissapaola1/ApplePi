@@ -1,6 +1,6 @@
 # EDA: what one year of 15-minute prices taught us
 
-Source: [eda_final.ipynb](eda_final.ipynb), run on `../Data/train_prices_15min.csv` only (4 zones, 2025-10-01 → 2026-09-30, 363 days per zone, 139,392 quarter-hour prices, no missing values). No external data.
+Source: [EDA_final_Paola.ipynb](EDA_final_Paola.ipynb), run on `../Data/train_prices_15min.csv` only (4 zones, 2025-10-01 → 2026-09-30, 363 days per zone, 139,392 quarter-hour prices, no missing values). No external data.
 Figures: [results/eda_final/](results/eda_final/). Hours are clock hours (09h = 09:00–10:00).
 
 **The story in one paragraph.** The four zones are four different markets in *level* and *risk*, but they share one *daily rhythm*: a morning peak, a deep solar valley at midday, and an expensive evening peak. The hourly price we are given already explains 93–96% of the price variance. The remaining 4–7%, the movement *inside* the hour, is what the challenge scores. That movement is not noise. Inside each hour the price slides in the direction the day's curve is moving, and it snaps back at the next hour, forming a **sawtooth**. The first and last quarters carry 2–3× more error than the middle two. The slide is predictable from the 24 hourly prices themselves: the slope between neighbouring hours correlates 0.76–0.91 with the tilt inside the hour. A one-parameter, no-training slope rule cuts the flat-baseline error by **40%**. What remains sits at the morning and evening ramps, the turning points and the day edges, and that is where the learned model has to earn its place.
@@ -31,8 +31,8 @@ EUR/MWh, 15-minute prices.
 
 Other zones: [ZONE_1](results/eda_final/06_price_distribution_zone1.png) · [ZONE_2](results/eda_final/06_price_distribution_zone2.png) · [ZONE_3](results/eda_final/06_price_distribution_zone3.png)
 
-- **A mixture of two Gaussians fits best in every zone** (lowest AIC), ahead of Student-t, skew-normal and plain Gaussian. Prices behave like **two regimes**: a "normal" bulk around 80–140, and a separate cluster near 0 or below (the tall bar at 0 in ZONE_0) from solar-surplus hours.
-- **For the model:** heavy tails and two regimes mean squared-error losses would be dominated by rare events, so we use **MAE and medians**.
+- **A mixture of two Gaussians fits pooled raw prices best among the candidates by in-sample AIC.** This is descriptive, not evidence of two causal market regimes, a conditional error distribution, or the need for a two-model architecture. Price-only observations do not establish a solar mechanism.
+- **For the model:** the official metric is MAE, which motivates L1 learning and median-oriented point predictions. Heavy tails motivate checking extreme errors separately; the distribution fit does not itself determine the training objective.
 
 ## 2. The typical day: two peaks and a solar valley
 
@@ -113,8 +113,8 @@ Other zones: [ZONE_1](results/eda_final/07_residual_distribution_zone1.png) · [
 
 Fit per zone: [ZONE_0](results/eda_final/09_spread_fit_zone0.png) · [ZONE_1](results/eda_final/09_spread_fit_zone1.png) · [ZONE_2](results/eda_final/09_spread_fit_zone2.png) · [ZONE_3](results/eda_final/09_spread_fit_zone3.png)
 
-- **A typical hour is calm:** the median spread is **5.9 EUR/MWh** (ZONE_2 4.8, ZONE_1 7.3).
-- **There is a long tail:** 1 hour in 10 has a spread above about **20**, and 1–3% of hours go above 40.
+- **Within-hour standard deviation:** its full-year median is **5.88 EUR/MWh** (ZONE_2 about 4.8, ZONE_1 about 7.3). This is not max-minus-min range, whose median is **15.14 EUR/MWh**.
+- **There is a long tail in within-hour standard deviation:** about 1 hour in 10 exceeds **20 EUR/MWh**, and 1–3% exceed 40. These thresholds describe standard deviation, not range.
 - **Some hours don't move at all:** 0.5–4.4% of hours, mostly in ZONE_3, have all 4 quarters at the same price.
 - **Gamma and Weibull fit best and are almost tied** (KS gap about 0.01–0.03). Log-normal fits worst. There is no sign of separate regimes, just one smooth, skewed tail.
 - **What this means:** the error will be driven by a minority of volatile hours. Each zone must be judged separately.
@@ -272,7 +272,7 @@ The dashed line is the flat guess, the solid line is slope × 2, and the shaded 
 ## What we take into the model
 
 1. **Predict residuals, not prices.** The hourly level is given and explains 93–96% of the variance. Only the zero-sum shape inside the hour is learned, and a final re-centering guarantees the ±0.0001 constraint.
-2. **Start from the slope.** A smooth interpolation through the hourly curve (slope rule or PCHIP) is a strong, training-free baseline that already removes about 40% of the error.
+2. **Start from the slope.** A fixed slope ×2 baseline removes about 40% of full-sample flat error; cumulative PCHIP removes about 29%. They are different baselines. The multiplier was explored on the full sample, so chronological comparison remains exploratory.
 3. **Add what the slope misses:** curvature and the ±2 neighbouring hours for the turning points (03h, 07h, 13h, 20h) and the peaks; hour of day; and the day's spread, which matters more than its level.
 4. **Handle the day edges.** Use the previous day's history (for example, its last hours and recent residuals at the same hour) where the curve is one-sided.
 5. **Work per zone and per regime.** Use a separate strength per zone (ZONE_1 strong, ZONE_2 weak) and a winter vs solar-season flag.
@@ -280,3 +280,18 @@ The dashed line is the flat guess, the solid line is slope × 2, and the shaded 
 7. **Validate on time only.** Fit k and models on earlier months, score on later ones, and take lag features strictly from earlier dates.
 
 These findings are what the final AET pipeline builds on: PCHIP interpolation plus LightGBM on slope, curvature and zigzag coefficients, with an L1 loss and history features. It reaches **5.04 MAE vs 10.90 for flat** on the September 2026 backtest.
+
+
+## Updated development comparison
+
+On identical eight Jan–Aug development folds (days 19 onward):
+
+| Method | MAE (EUR/MWh) |
+|---|---:|
+| Flat | 8.1276 |
+| Linear ramp ×1 | 5.7580 |
+| PCHIP | 5.6185 |
+| Linear ramp ×2 | 4.8322 |
+| Frozen final model | 3.9479 |
+
+The final model improves 18.3% over slope ×2. Retain PCHIP as an intermediate comparison because it is the final model's baseline. Slope ×2 was suggested by full-year EDA; this is not a new untouched evaluation. Local-geometry and extrema-distance experiments are opt-in and do not change the saved model. No September targets are used in these experiments.

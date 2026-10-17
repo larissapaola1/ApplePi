@@ -25,6 +25,8 @@ class FeatureConfig:
     cross_zone: bool = True      # same-day hourly curves of every zone
     prev_day_edge: bool = True   # hour 1 sees the previous day's last hours (from history)
     volatility_history: bool = False  # opt-in research extension; old/frozen features unchanged
+    local_geometry: bool = False
+    extrema_distance: bool = False
 
     @classmethod
     def from_dict(cls, data) -> "FeatureConfig":
@@ -76,6 +78,23 @@ def build_features(dates, H: np.ndarray, base_coeffs: np.ndarray, store: History
     put("day_std", H.std(axis=-1, keepdims=True))
     put("day_negative_hours", (H < 0).sum(axis=-1, keepdims=True))
     put("relative_level", h0 - day_mean)
+
+    if cfg.local_geometry:
+        b, f = slope_m1, slope_p1
+        total = np.abs(b) + np.abs(f)
+        put("local_movement", total / 2.0)
+        put("turning_point", np.where(np.isfinite(b) & np.isfinite(f), (b*f < 0).astype(float), np.nan))
+        # Normalised signed curvature: not the same as |f|-|b|.
+        put("ramp_asymmetry", (f-b)/(total + 1e-6))
+        day_range = H.max(axis=-1, keepdims=True) - H.min(axis=-1, keepdims=True)
+        put("norm_movement", total/np.maximum(day_range, 1.0))
+
+    if cfg.extrema_distance:
+        # First occurrence breaks ties; constant days get no unique extrema location.
+        idx = np.arange(HOURS)[None, None, :]
+        varying = (H.max(axis=-1, keepdims=True)-H.min(axis=-1, keepdims=True)) > 0
+        put("dist_to_peak", np.where(varying, np.abs(idx-H.argmax(axis=-1, keepdims=True)), np.nan))
+        put("dist_to_trough", np.where(varying, np.abs(idx-H.argmin(axis=-1, keepdims=True)), np.nan))
 
     if cfg.cross_zone:
         for k in range(n_zones):
