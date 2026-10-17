@@ -5,3 +5,7 @@
 # instructionts
 instructions.txt
 submission.txt
+
+__pycache__/
+.ipynb_checkpoints/
+.venv/
