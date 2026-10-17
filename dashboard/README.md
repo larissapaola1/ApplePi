@@ -1,7 +1,8 @@
 # Dashboard (optional)
 
 Interactive replay of the reconstruction on the September 2026 hold-out: hourly input, PCHIP
-baseline, learned slope/curvature/zigzag corrections, the final 15-minute curve and a heuristic
+baseline, learned slope/curvature/zigzag corrections, the fixed post-processing rules (zone coupling,
+partial tie, sign floor/ceiling), the final 15-minute curve and a heuristic
 risk flag per hour. It is not part of the inference path.
 
 ## Required resources

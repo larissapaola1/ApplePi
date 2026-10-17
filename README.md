@@ -7,11 +7,14 @@ The only data source is the official participant package; place it in data/ (see
 
 ## Current model and evidence
 
-The current configuration and supplied `artifacts_official/` use:
+The current configuration (I3) and supplied `artifacts_official/` use:
 - cumulative PCHIP interpolation;
-- three L1 LightGBM regressors for zero-sum slope, curvature and zigzag residual coefficients;
+- three L1 LightGBM regressors (1000 rounds) for zero-sum slope, curvature and zigzag residual coefficients;
 - residual scale 0.8;
 - historical and cross-zone features; **prev_day_edge: true**;
+- fixed mean-preserving post-processing: zones within 0.1 EUR/MWh share one quarter-hour shape,
+  zones within 5 EUR/MWh move 40% toward their cluster shape, and quarters keep the sign of their
+  hour (floor -0.01 for positive hours, ceiling 0 for negative hours);
 - no analogue memory, graph smoothing, quantile decision or magnitude-feature extension.
 
 | Method | Official-data development MAE | September backtest MAE |
@@ -21,16 +24,18 @@ The current configuration and supplied `artifacts_official/` use:
 | PCHIP | 5.6185 | 6.9270 |
 | Linear ramp ×2 | 4.8322 | — |
 | Unscaled coefficient model with history | 3.9838 | 5.4270 |
-| Current final | **3.9479** | **5.0444** |
+| I2, previous final (no post-processing, 500 rounds) | 3.9479 | 5.0444 |
+| **I3, current final** | **3.8883** | **5.0032** |
 
 EUR/MWh. Development: eight Jan–Aug monthly folds, days 19–month-end. September: train
-through August, assess 19–30 September. September aggregate EDA had already been inspected;
-the block was held out from the subsequent official model comparisons. Exported inference
-scores 5.0442 rather than 5.0444 due to tiny hourly-input rounding differences affecting tree
-branches; both paths improve over flat by approximately 53.7%. See docs/METHODOLOGY.md.
+through August, assess 19–30 September. September aggregate EDA had already been inspected,
+and September was scored a second time when switching from I2 to I3, so it is not an untouched
+holdout for I3 (docs/METHODOLOGY.md section 4). Exported inference scores 5.0035 rather than
+5.0032 due to tiny hourly-input rounding differences affecting tree branches and tie tolerances;
+both paths improve over flat by approximately 54.1%.
 
 On these development folds, PCHIP improves over flat by 30.87%, slope ×2 by 40.55%,
-and the final model by 51.43%. Final improves over slope ×2 by 18.30%.
+and the final model by 52.16%. Final improves over slope ×2 by 19.53%.
 The full-year descriptive EDA uses a different sample (PCHIP approximately 29%);
 do not mix its percentages with this table. Dashes mean no assessment reported here.
 New local-geometry and extrema-distance features did not pass the development promotion

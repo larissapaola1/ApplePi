@@ -17,6 +17,7 @@ October 2026 dates in training input.
 | LightGBM (L1) with history features | Errors concentrate at ramps, turning points and day edges (EDA §13–14) | 3.9838 |
 | Cross-zone features | Zones share a daily rhythm | Removing them: 4.0406 |
 | Previous-day edge features | Largest unexplained error at the day edge, e.g. ZONE_3 00h (EDA §14) | Removing them after scaling: −0.16% |
-| Residual scale 0.8 | — | 3.9479, better on 6/8 folds (final) |
+| Residual scale 0.8 | — | 3.9479, better on 6/8 folds (I2, previous final) |
+| Zone coupling, partial tie, sign floor/ceiling, 1000 rounds | Zones share a daily rhythm; quarters rarely change sign within an hour | 3.8883, better on 8/8 folds and all zones (I3, current final) |
 
 Full results: [METHODOLOGY.md](METHODOLOGY.md) and [results/summary.csv](../results/summary.csv).

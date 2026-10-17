@@ -73,18 +73,22 @@ freeze, reference fitting and its provenance must be explicitly documented, not 
 
 ## Initial official-data development results
 
-The opt-in magnitude-feature model scored 3.9590 EUR/MWh versus the incumbent's 3.9479,
+The opt-in magnitude-feature model scored 3.9590 EUR/MWh versus the incumbent's (I2) 3.9479,
 0.28% worse, improving only 2/8 folds. It was not promoted. Leave `volatility_history: false`
 in the final model; the diagnostic risk indicator is independent of that model choice.
 
-The heuristic's low/medium/high groups have increasing observed average error in all four zones:
+The heuristic's low/medium/high groups have increasing observed average error in all four zones
+(model errors from the current final model I3, replayed over the same folds; overall MAE 3.8883):
 
 | Zone | Low-risk MAE | Medium-risk MAE | High-risk MAE |
 |---|---:|---:|---:|
-| ZONE_0 | 1.524 | 2.387 | 5.926 |
-| ZONE_1 | 2.833 | 3.815 | 8.497 |
-| ZONE_2 | 2.042 | 3.446 | 5.754 |
-| ZONE_3 | 2.297 | 4.036 | 7.322 |
+| ZONE_0 | 1.510 | 2.373 | 5.895 |
+| ZONE_1 | 2.799 | 3.764 | 8.315 |
+| ZONE_2 | 2.034 | 3.400 | 5.681 |
+| ZONE_3 | 2.220 | 3.932 | 7.203 |
+
+With the previous final model (I2) the same groups scored 1.524/2.387/5.926, 2.833/3.815/8.497,
+2.042/3.446/5.754 and 2.297/4.036/7.322; the high/low ratios (2.8–3.9×) are unchanged.
 
 These are development-period group averages in EUR/MWh, not probabilities or error guarantees.
 The index and its 50th/90th-percentile categories were predefined for this experiment, not tuned

@@ -46,6 +46,11 @@ class PipelineConfig:
     recency_halflife_days: float | None = None  # optional recency weighting of training rows
     memory: dict | None = None                  # E4 analogue memory, e.g. {k: 16, window_days: 180}
     shrinkage: dict | None = None               # E6 cross-zone graph shrinkage, e.g. {lambda: 0.1}
+    couple_tol: float | None = None             # R-011: zones with |H_z - H_k| <= tol share one shape
+    partial_tie: dict | None = None             # R-017: move a fraction toward the cluster shape, e.g. {tol: 5.0, alpha: 0.4}
+    forward_scale: dict | None = None           # R-008c shared scale fitted forward in time, e.g. {blocks: 4}
+    price_floor: float | None = None            # R-016: hours with H > floor keep every quarter >= floor
+    price_ceiling: float | None = None          # R-016b: hours with H < ceiling keep every quarter <= ceiling
     zones: tuple = ZONES
     seed: int = 42
 
@@ -115,6 +120,7 @@ class ShapePipeline:
         self.training_range: tuple[str, str] | None = None
         self.memory: AnalogueMemory | None = None   # scaler fitted on the training slice, then frozen
         self.shrink_scale: float | None = None      # graph similarity scale from training spreads
+        self.fitted_scale: float | None = None      # residual scale from forward cross-fitting
 
     @property
     def zones(self) -> tuple:
@@ -149,10 +155,31 @@ class ShapePipeline:
                 X.loc[keep].reset_index(drop=True), R[keep], self.basis,
                 None if weight is None else weight[keep],
             )
+            if self.config.forward_scale is not None:
+                blocks = int(self.config.forward_scale.get("blocks", 4))
+                block = np.repeat(np.arange(len(cube.dates)) * blocks // len(cube.dates), len(self.zones) * HOURS)
+                self.fitted_scale = self._fit_forward_scale(
+                    X.loc[keep].reset_index(drop=True), R[keep], None if weight is None else weight[keep], block[keep]
+                )
         if self.config.shrinkage is not None:
             self.shrink_scale = self._fit_shrink_scale(cube.hourly(), self.config.shrinkage.get("floor", 1.0))
         self.training_range = (str(cube.dates[0]), str(cube.dates[-1]))
         return self
+
+    def _fit_forward_scale(self, X: pd.DataFrame, R: np.ndarray, weight, block: np.ndarray) -> float:
+        """R-008c: each date block after the first is predicted by a model fitted on the earlier
+        blocks only; one shared scale (grid 0..1.5) minimises the price-space L1 of those residuals."""
+        pred = np.zeros_like(R)
+        for b in np.unique(block)[1:]:
+            past, now = block < b, block == b
+            model = MODELS[self.config.model]({**self.config.model_params, "seed": self.config.seed},
+                                              self.config.num_boost_round)
+            model.fit(X.loc[past].reset_index(drop=True), R[past], self.basis, None if weight is None else weight[past])
+            pred[now] = model.predict(X.loc[now], self.basis)
+        scored = block > block.min()
+        grid = np.arange(0.0, 1.5001, 0.05)
+        losses = [np.abs(R[scored] - g * pred[scored]).sum() for g in grid]
+        return round(float(grid[int(np.argmin(losses))]), 2)
 
     @staticmethod
     def _fit_shrink_scale(H: np.ndarray, floor: float) -> float:
@@ -178,6 +205,43 @@ class ShapePipeline:
         out[:, ok] = H[:, ok, None] + decode(Cs.transpose(1, 0, 2), self.basis)
         return out
 
+    def _tie(self, P: np.ndarray, H: np.ndarray, tol: float | None = None, alpha: float = 1.0) -> np.ndarray:
+        """R-011: per hour, zones linked by |H_z - H_k| <= tol (default couple_tol; connected
+        components) move a fraction alpha (R-017; 1 = the full tie) toward the mean of their
+        intra-hour deviations. Deviations are zero-sum, so means are kept."""
+        tol = self.config.couple_tol if tol is None else tol
+        D = P - H[..., None]                                           # [zone, 24, 4]
+        out = P.copy()
+        n = len(H)
+        for h in range(H.shape[1]):
+            link = np.abs(H[:, None, h] - H[None, :, h]) <= tol
+            np.fill_diagonal(link, True)
+            reach = link
+            for _ in range(n):
+                reach = (reach.astype(int) @ link.astype(int)) > 0
+            finite = np.isfinite(D[:, h]).all(axis=-1)
+            for z in range(n):
+                members = reach[z] & finite
+                if members.sum() > 1:
+                    out[z, h] = H[z, h] + D[z, h] + alpha * (D[members, h].mean(axis=0) - D[z, h])
+        return out
+
+    @staticmethod
+    def _floor(P: np.ndarray, H: np.ndarray, floor: float) -> np.ndarray:
+        """R-016: in hours with H > floor, Euclidean projection onto {x >= floor, mean x = H}:
+        x = max(p - lam, floor), so quarters below the floor rise to it and the others drop by one
+        common amount. Hours with H <= floor or no quarter below it are unchanged."""
+        out = P.copy()
+        act = np.isfinite(P).all(axis=-1) & (H > floor) & (np.nan_to_num(P, nan=np.inf).min(axis=-1) < floor)
+        if not act.any():
+            return out
+        p = -np.sort(-P[act], axis=-1)                                 # descending
+        k = np.arange(1, QUARTERS + 1)
+        lam = (np.cumsum(p, axis=-1) + (QUARTERS - k) * floor - QUARTERS * H[act][:, None]) / k
+        top = (p - lam > floor).sum(axis=-1)                           # quarters left above the floor
+        out[act] = np.maximum(P[act] - lam[np.arange(len(p)), top - 1][:, None], floor)
+        return out
+
     def _recency_weights(self, dates: np.ndarray) -> np.ndarray | None:
         half_life = self.config.recency_halflife_days
         if not half_life:
@@ -197,9 +261,20 @@ class ShapePipeline:
             store = HistoryStore.build(history.before(day), self.config.baseline, self.basis)
             X = self._features(np.array([day]), H, base, store)
             residual = self.model.predict(X, self.basis).reshape(base.shape)
+            if self.fitted_scale is not None:
+                residual = self.fitted_scale * residual
         P = base + self.config.residual_scale * residual
         if self.shrink_scale is not None:
             P = self._shrink(P[0], H[0])[None]
+        if self.config.couple_tol is not None:
+            P = self._tie(P[0], H[0])[None]
+        if self.config.partial_tie is not None:
+            tie = self.config.partial_tie
+            P = self._tie(P[0], H[0], float(tie["tol"]), float(tie["alpha"]))[None]
+        if self.config.price_floor is not None:
+            P = self._floor(P, H, float(self.config.price_floor))
+        if self.config.price_ceiling is not None:   # the mirrored projection: quarters below rise
+            P = -self._floor(-P, -H, -float(self.config.price_ceiling))
         P, to_baseline, to_flat = finalize(P, H, base)
         info = {"fallback_hours": to_baseline[0].sum(axis=-1), "flat_hours": to_flat[0].sum(axis=-1)}
         if self.learned and getattr(self.model, "last_bracketed", None) is not None:
@@ -247,6 +322,7 @@ class ShapePipeline:
             "basis_matrix": self.basis.tolist(),
             "memory": self.memory.to_dict() if self.memory is not None else None,
             "shrink_scale": self.shrink_scale,
+            "fitted_scale": self.fitted_scale,
             "training_range": self.training_range,
             "versions": runtime_versions(),
             **(extra or {}),
@@ -265,6 +341,7 @@ class ShapePipeline:
             directory, manifest["model"], pipe.model.params, pipe.config.num_boost_round
         )
         pipe.shrink_scale = manifest.get("shrink_scale")
+        pipe.fitted_scale = manifest.get("fitted_scale")
         if manifest.get("memory"):
             pipe.memory = AnalogueMemory.from_dict(manifest["memory"])
         if manifest.get("training_range"):

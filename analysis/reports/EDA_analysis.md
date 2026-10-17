@@ -292,6 +292,7 @@ On identical eight Jan–Aug development folds (days 19 onward):
 | Linear ramp ×1 | 5.7580 |
 | PCHIP | 5.6185 |
 | Linear ramp ×2 | 4.8322 |
-| Frozen final model | 3.9479 |
+| Previous final model (I2) | 3.9479 |
+| Current final model (I3) | 3.8883 |
 
-The final model improves 18.3% over slope ×2. Retain PCHIP as an intermediate comparison because it is the final model's baseline. Slope ×2 was suggested by full-year EDA; this is not a new untouched evaluation. Local-geometry and extrema-distance experiments are opt-in and do not change the saved model. No September targets are used in these experiments.
+The current final model improves 19.5% over slope ×2 (I2: 18.3%). Retain PCHIP as an intermediate comparison because it is the final model's baseline. Slope ×2 was suggested by full-year EDA; this is not a new untouched evaluation. Local-geometry and extrema-distance experiments are opt-in and do not change the saved model. No September targets are used in these experiments.

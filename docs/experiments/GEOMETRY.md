@@ -1,5 +1,9 @@
 # EDA-driven development experiment
 
+> Run before the switch to the current final model (I3). "Incumbent" here is the previous final
+> model I2 (3.9479); I3 scores 3.8883 on the same folds and is 19.53% better than slope ×2.
+> See [METHODOLOGY.md](../METHODOLOGY.md) section 4.
+
 The experiment uses official data and the existing eight January–August monthly development
 folds, with the unchanged incumbent as reference. No September assessment was run and no
 frozen model artifacts were overwritten. These are reused development folds, not a new

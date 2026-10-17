@@ -1,7 +1,8 @@
 # Running the official-data reconstruction artifacts
 
-The supplied model uses PCHIP + 0.8 times three zero-sum LightGBM coefficient corrections,
-with history, cross-zone and previous-day boundary features enabled.
+The supplied model (I3) uses PCHIP + 0.8 times three zero-sum LightGBM coefficient corrections,
+with history, cross-zone and previous-day boundary features enabled, followed by fixed
+mean-preserving zone-coupling, partial-tie and sign floor/ceiling rules.
 
 ## Environment
 

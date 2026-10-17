@@ -10,16 +10,27 @@
       "num_leaves": 15,
       "min_data_in_leaf": 100
     },
-    "num_boost_round": 500,
+    "num_boost_round": 1000,
     "features": {
       "history": true,
       "cross_zone": true,
-      "prev_day_edge": true
+      "prev_day_edge": true,
+      "volatility_history": false,
+      "local_geometry": false,
+      "extrema_distance": false
     },
     "residual_scale": 0.8,
     "recency_halflife_days": null,
     "memory": null,
     "shrinkage": null,
+    "couple_tol": 0.1,
+    "partial_tie": {
+      "tol": 5.0,
+      "alpha": 0.4
+    },
+    "forward_scale": null,
+    "price_floor": -0.01,
+    "price_ceiling": 0.0,
     "zones": [
       "ZONE_0",
       "ZONE_1",
@@ -107,6 +118,7 @@
   ],
   "memory": null,
   "shrink_scale": null,
+  "fitted_scale": null,
   "training_range": [
     "2025-10-01",
     "2026-09-30"
@@ -118,12 +130,12 @@
     "scipy": "1.17.1",
     "lightgbm": "4.7.0"
   },
-  "trained_at": "2026-10-17T10:39:56",
-  "train_seconds": 2.64,
+  "trained_at": "2026-10-18T01:07:55",
+  "train_seconds": 5.02,
   "training_csv": "train_prices_15min.csv",
   "training_csv_sha256": "f71ae6dbcca5f04e76e35840e29d064e69ad292f26d8ec7bf013bff2d904f65c",
   "training_rows": 139392,
   "training_dates": 363,
   "config_file": "configs/final.yaml",
-  "config_sha256": "4e5b54325c0c49e81cf2cb312ee21a2f81a20f6bc4c5bd687607c2ef2fc8c7c3"
+  "config_sha256": "c615197f0f68d98097ecaaf68d65d9505d161f34d4447eac463748b0f85d9474"
 }
