@@ -1,6 +1,6 @@
 # EDA: what one year of 15-minute prices taught us
 
-Source: [EDA_final_Paola.ipynb](EDA_final_Paola.ipynb), run on `../Data/train_prices_15min.csv` only (4 zones, 2025-10-01 → 2026-09-30, 363 days per zone, 139,392 quarter-hour prices, no missing values). No external data.
+Source: [EDA_final.ipynb](eda_final.ipynb), run on `train_prices_15min.csv` only (4 zones, 2025-10-01 → 2026-09-30, 363 days per zone, 139,392 quarter-hour prices, no missing values). No external data.
 Figures: [results/eda_final/](results/eda_final/). Hours are clock hours (09h = 09:00–10:00).
 
 **The story in one paragraph.** The four zones are four different markets in *level* and *risk*, but they share one *daily rhythm*: a morning peak, a deep solar valley at midday, and an expensive evening peak. The hourly price we are given already explains 93–96% of the price variance. The remaining 4–7%, the movement *inside* the hour, is what the challenge scores. That movement is not noise. Inside each hour the price slides in the direction the day's curve is moving, and it snaps back at the next hour, forming a **sawtooth**. The first and last quarters carry 2–3× more error than the middle two. The slide is predictable from the 24 hourly prices themselves: the slope between neighbouring hours correlates 0.76–0.91 with the tilt inside the hour. A one-parameter, no-training slope rule cuts the flat-baseline error by **40%**. What remains sits at the morning and evening ramps, the turning points and the day edges, and that is where the learned model has to earn its place.
@@ -114,7 +114,7 @@ Other zones: [ZONE_1](results/eda_final/07_residual_distribution_zone1.png) · [
 Fit per zone: [ZONE_0](results/eda_final/09_spread_fit_zone0.png) · [ZONE_1](results/eda_final/09_spread_fit_zone1.png) · [ZONE_2](results/eda_final/09_spread_fit_zone2.png) · [ZONE_3](results/eda_final/09_spread_fit_zone3.png)
 
 - **Within-hour standard deviation:** its full-year median is **5.88 EUR/MWh** (ZONE_2 about 4.8, ZONE_1 about 7.3). This is not max-minus-min range, whose median is **15.14 EUR/MWh**.
-- **There is a long tail in within-hour standard deviation:** about 1 hour in 10 exceeds **20 EUR/MWh**, and 1–3% exceed 40. These thresholds describe standard deviation, not range.
+- **There is a long tail in within-hour standard deviation:** about 1 hour in 10 exceeds **20 EUR/MWh** across all zones, and the share above 40 ranges from 0.1% (ZONE_2) to 3.3% (ZONE_1), 1.6% overall. These thresholds describe standard deviation, not range.
 - **Some hours don't move at all:** 0.5–4.4% of hours, mostly in ZONE_3, have all 4 quarters at the same price.
 - **Gamma and Weibull fit best and are almost tied** (KS gap about 0.01–0.03). Log-normal fits worst. There is no sign of separate regimes, just one smooth, skewed tail.
 - **What this means:** the error will be driven by a minority of volatile hours. Each zone must be judged separately.
