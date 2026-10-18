@@ -5,6 +5,8 @@ __pycache__/
 .venv*/
 *.Rhistory
 dist/
+.agents*
+.claude*
 
 # Data is not redistributed: place the official CSV in data/ (see data/README.md)
 data/*
