@@ -122,17 +122,22 @@ The final model reduces average price error by \textbf{52.2\% on development dat
 For us, these results suggest that there is useful structure to recover beyond the hourly average. However, we evaluated price accuracy; we have not measured the effect on actual trading results or portfolio valuations.
 
 \newpage
-\section{Dashboard: understanding the predictions}
-We also wanted to make the model more approachable for someone who does not work with machine learning. We built an interactive dashboard where users can select a zone and date range and compare reconstructed and observed prices. They can inspect how slope, curvature, zigzag and the final rules contribute to each quarter-hour prediction, and see which signal drove the risk flag for that hour.
+\section{Dashboard: results and how to read them}
+We also wanted to make the results approachable for someone who does not work with machine learning. The main page of our interactive dashboard, \textbf{Model Results}, replays the September hold-out (or the user's own test days): for one zone or all four, and any date range, it compares reconstructed with observed prices and reports the error per zone. Three complementary pages help interpret these results:
+\begin{itemize}
+\item \textbf{Understanding the Model:} what the model relies on overall, and one hour broken down step by step (Figure~2).
+\item \textbf{Risk Alerts:} the hours to trust less, flagged before their 15-minute prices are known.
+\item \textbf{Data Story:} the patterns in the official data that shaped the model.
+\end{itemize}
 
 \begin{center}
 \includegraphics[width=0.74\linewidth,trim=0 76bp 0 55bp,clip]{images/dashboard_detail.png}
-\captionof{figure}{Actual dashboard view for ZONE\_0 on 19 September 2026, 18:00--19:00.}
+\captionof{figure}{Understanding the Model page for ZONE\_0 on 19 September 2026, 18:00--19:00.}
 \end{center}
 
-What we find useful about this view is that it shows what happens behind the final curve. Users can see how the baseline, slope, curvature, zigzag and rules contribute to each prediction, including where the model still makes mistakes.
+What we find useful about this view is that it shows what happens behind the final curve: how the baseline, slope, curvature, zigzag and rules contribute to each prediction, including where the model still makes mistakes.
 
-Furthermore, the dashboard highlights potentially difficult hours using hourly ramps, daily price variability and recent historical reconstruction difficulty. These flags explain the main signal behind the label. They are \textbf{heuristics, not calibrated confidence probabilities}, and the dashboard shows a historical assessment replay.
+The risk flags use hourly ramps, daily price variability and recent historical reconstruction difficulty, and name the main signal behind each label. They are \textbf{heuristics, not calibrated confidence probabilities}.
 
 \subsection*{Does the indicator identify harder hours?}
 On the January--August development folds, hours flagged as high-risk had \textbf{2.8--3.9 times the reconstruction error} of low-risk hours across the four zones. This suggests that the indicator helps distinguish harder hours, although it does not guarantee an individual prediction's accuracy.
