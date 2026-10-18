@@ -37,45 +37,39 @@ Our assigned AET challenge was to reconstruct \textbf{96 quarter-hour electricit
 An hourly average hides movements between its four quarters. This matters because electricity is not necessarily delivered evenly throughout the hour, so a more detailed price curve could support more accurate valuation. Our task was to recover as much of that missing shape as possible using the official price data, while keeping the hourly reference unchanged.
 
 \section{Approach}
-For hour $h$ and quarter $q$, our prediction is a smooth baseline plus 80\% of a learned correction, then three fixed rules:
+Our analysis of the official data shaped the model. The hourly price already explains 93--96\% of the price variance; what is scored is the shape inside each hour. That shape is largely predictable: the slope between neighbouring hours correlates 0.76--0.91 with the tilt inside the hour, as prices slide with the daily curve and snap back at the next hour. What remains concentrates at ramps, turning points and day edges. We therefore built the prediction in layers:
 {\setlength{\abovedisplayskip}{1pt}\setlength{\belowdisplayskip}{0pt}\[
-\hat p_{h,q} = \underbrace{b_{h,q}}_{\text{PCHIP baseline}} + \, 0.8\,\underbrace{\big(c^{\mathrm{slope}}_{h}\,s_q + c^{\mathrm{curv}}_{h}\,k_q + c^{\mathrm{zig}}_{h}\,z_q\big)}_{\text{LightGBM correction}}.
+\hat p_{h,q} = \underbrace{b_{h,q}}_{\text{PCHIP baseline}} + \, 0.8\,\underbrace{\big(c^{\mathrm{slope}}_{h}\,s_q + c^{\mathrm{curv}}_{h}\,k_q + c^{\mathrm{zig}}_{h}\,z_q\big)}_{\text{LightGBM correction}}, \quad\text{then three fixed rules.}
 \]}
 
-Repeating the hourly price four times is the simplest option; smooth interpolation is a better starting point but misses sharper movements within hours. We therefore combined PCHIP (Piecewise Cubic Hermite Interpolating Polynomial) interpolation on the cumulative hourly curve with three LightGBM models. PCHIP provides a shape-preserving baseline that respects hourly averages. LightGBM uses boosted decision trees to learn the remaining corrections from price and calendar features. This gives us a compact model whose output can be explained through three components:
+\textbf{Baseline.} We interpolate the running sum of hourly prices with PCHIP (Piecewise Cubic Hermite Interpolating Polynomial) and difference it back into quarters. The increments telescope, so every hourly average is exact, and PCHIP does not overshoot at spikes. This captures the smooth part of the slope (development MAE 8.13 flat $\to$ 5.62~\euro{}/MWh).
+
+\textbf{Correction.} With the hourly mean fixed, four quarters have exactly three degrees of freedom. Three orthonormal vectors whose entries sum to zero therefore describe every possible shape, and adding them can never move the average:
 \begin{itemize}
-\item \textbf{Slope:} whether prices rise or fall within the hour.
-\item \textbf{Curvature:} whether the middle quarters sit above or below the outer quarters.
-\item \textbf{Zigzag:} alternating movements between quarters.
+\item \textbf{Slope}, $s=(-3,-1,1,3)/\sqrt{20}$: whether prices rise or fall within the hour.
+\item \textbf{Curvature}, $k=(1,-1,-1,1)/2$: whether the middle quarters sit above or below the outer quarters.
+\item \textbf{Zigzag}, $z=(-1,3,-3,1)/\sqrt{20}$: alternating movements between quarters.
 \end{itemize}
-The shapes $s$, $k$, $z$ add up to zero within each hour, so the corrections change its shape, not its average.
+One LightGBM model per vector predicts its coefficient from the day's hourly curve, differences between zones, calendar information and earlier quarter-hour patterns, never from the target day's quarter-hours. Boosted trees suit the non-linear situations behind the remaining error, such as ramps and turning points, and an absolute-error loss keeps spikes from dominating training. This basis beat a Haar basis (3.98 vs 4.00 \euro{}/MWh), and removing cross-zone features worsened MAE to 4.04. Applying 80\% of the predicted correction lowered MAE by a further 0.9\% (6 of 8 folds): when the model is unsure, a partial correction is safer than a full one.
 
-The models use the supplied hourly curves, differences between zones, calendar information and earlier price patterns. They never receive the actual quarter-hour prices of the day being reconstructed. We train each LightGBM model to minimise absolute error on its basis coefficient. We select between candidate configurations using the official mean absolute error on reconstructed quarter-hour prices. Applying 80\% of the learned correction worked better during development than applying it in full, so we kept that setting.
-
-Finally, three fixed rules (no fitted parameters) adjust each hour without changing its average:
+\textbf{Fixed rules.} Three rules with no fitted parameters then adjust each hour, keeping its average:
 \begin{itemize}
 \item \textbf{Zone coupling:} zones with almost the same hourly price (within 0.1~\euro{}/MWh) usually move together, so they share one shape: the average of their predicted shapes.
-\item \textbf{Partial tie:} zones within 5~\euro{}/MWh behave similarly but less reliably, so each moves 40\% towards the group's shape.
+\item \textbf{Partial tie:} zones within 5~\euro{}/MWh behave similarly but less reliably; each moves 40\% towards the group's shape.
 \item \textbf{Sign rule:} quarters rarely change sign within an hour. In a positive hour no quarter may fall below $-0.01$~\euro{}/MWh, in a negative hour none may exceed 0; the remaining quarters shift to keep the average.
 \end{itemize}
-Adding the rules and 1000 (not 500) boosting rounds cut development MAE by 1.5\% (all 8 folds). A final adjustment removes floating-point drift, and automated checks confirm the tolerance.
-
-Our official-data EDA highlighted the importance of slope and motivated a stronger linear-ramp benchmark. Evening ramp hours remained difficult, so we also investigated whether additional shape features could help.
+Adding the rules and 1000 (not 500) boosting rounds cut development MAE by 1.5\% (all 8 folds). A final adjustment removes floating-point drift, and automated checks confirm the 0.0001~\euro{}/MWh tolerance.
 
 \section{Challenges and solutions}
-\textbf{Working with incomplete information.} Several quarter-hour profiles can have the same hourly average. We could learn recurring patterns, but we could not expect to recover every movement exactly. This helped us understand the limits of the task.
+\textbf{Working with incomplete information.} Many quarter-hour profiles share the same hourly average, so we could learn recurring patterns but never recover every movement exactly.
 
-\looseness=-1 \textbf{Keeping the comparison fair.} We used chronological validation and historical inputs matched by calendar date. This prevents missing dates from shifting the history and keeps the target day's quarter-hour observations out of the model inputs.
+\looseness=-1 \textbf{Keeping the comparison fair.} We used chronological validation and historical inputs matched by calendar date, so missing dates cannot shift the history and the target day's quarter-hours never reach the model. A change was promoted only if it lowered development MAE by at least 0.5\%, improved at least two-thirds of the folds and left no zone more than 2\% worse.
 
-\looseness=-1 \textbf{Exploring different model families.} We tested Ridge and CatBoost, as well as temporal CNN, dilated TCN, LSTM and Transformer models. For the baseline-plus-correction approach, we compared LightGBM with CatBoost, Ridge, Random Forest and Extra Trees. We also explored different interpolation methods, correction weights and separate models for each zone.
-
-\looseness=-1 \textbf{Deciding when to stop adding complexity.} Local-geometry features slightly worsened our previous model's development MAE from \textbf{3.9479 to 3.9497 \euro{}/MWh}, so we retained the existing features. We also explored temporal and Bayesian graph models, error-correction models and ensembles. In a separate \textbf{June--August window}, a 25\% compact-graph / 75\% previous-model blend reduced MAE from \textbf{4.2246 to 4.2058 \euro{}/MWh} (0.4\%). We kept LightGBM, as this small gain did not justify the added complexity.
+\looseness=-1 \textbf{Deciding when to stop adding complexity.} We tested Ridge, CatBoost, temporal CNN, dilated TCN, LSTM and Transformer models; for the correction we compared LightGBM with CatBoost, Ridge, Random Forest and Extra Trees, and we tried other interpolation methods, correction weights and per-zone models. Most ideas failed the gate. Local-geometry features slightly worsened our previous model's development MAE (\textbf{3.9479 to 3.9497 \euro{}/MWh}). We also explored temporal and Bayesian graph models, error-correction models and ensembles: in a separate \textbf{June--August window}, a 25\% compact-graph / 75\% previous-model blend reduced MAE from \textbf{4.2246 to 4.2058 \euro{}/MWh} (0.4\%), below the gate and not worth the added complexity.
 
 \newpage
 \section{Results}
-We evaluated the model using mean absolute error (MAE), the average distance between reconstructed and observed prices. Each evaluation day and zone has equal weight; lower values are better.
-
-For development, we used eight chronological January--August folds, training on earlier dates and scoring days 19 through month-end. We then assessed a model trained through 31 August on 19--30 September. September results are also available for the graph experiments, and we scored September again before switching to the final rules, so we report this as a historical assessment rather than an untouched final test.
+We report mean absolute error (MAE) between reconstructed and observed prices, with equal weight for each day and zone. For development, we used eight chronological January--August folds, training on earlier dates and scoring days 19 through month-end. We then assessed a model trained through 31 August on 19--30 September. September results are also available for the graph experiments, and we scored September again before switching to the final rules, so we report this as a historical assessment rather than an untouched final test.
 
 \textbf{Overall reconstruction accuracy}
 \begin{center}
@@ -92,7 +86,7 @@ Previous model (no rules) & 3.95 & 5.04\\\hline
 \rowcolor{tablefinal}
 \textbf{Final model} & \textbf{3.89} & \textbf{5.00}\\\hline
 \end{tabularx}
-\captionof{table}{Average price error in \euro{}/MWh{}, from the project results summary. Development covers January--August folds. September scores, including PCHIP, use the same 19--30 September window. The full correction and the previous model (500 boosting rounds, no rules) are comparisons, not the submitted model.}
+\captionof{table}{Average price error in \euro{}/MWh{}. Each step adds one layer of the approach; the full correction and the previous model (500 boosting rounds, no rules) are comparisons, not the submitted model.}
 \end{center}
 
 \vspace{4pt}
@@ -112,7 +106,7 @@ ZONE\_3 & 4.57 & 9.79 & \textcolor{accent}{53.3\%}\\\hline
 \captionof{table}{September average price error by zone, comparing the final model with repeating the hourly price.}
 \end{center}
 
-The final model reduces average price error by \textbf{52.2\% on development dates} and \textbf{54.1\% on the September assessment}, compared with flat prices. Improvements appear in all four zones, although their size varies. Compared with the previous model, the September gain is smaller (0.8\%), and ZONE\_3 is slightly worse (4.57 instead of 4.55).
+The final model reduces average price error by \textbf{52.2\% on development dates} and \textbf{54.1\% on the September assessment}, compared with flat prices. On development dates, PCHIP removes 31\% of the flat error, and the correction and rules remove a further 31\% of what remains. Gains follow the EDA: ZONE\_0, where the slope between hours predicts the tilt best ($r=0.91$), improves most; ZONE\_2, where it is weakest ($r=0.76$), improves least. Compared with the previous model, the September gain is smaller (0.8\%), and ZONE\_3 is slightly worse (4.57 instead of 4.55).
 
 \begin{center}
 \includegraphics[width=0.67\linewidth]{images/representative_reconstruction.png}
@@ -125,7 +119,7 @@ For us, these results suggest that there is useful structure to recover beyond t
 \section{Dashboard: results and how to read them}
 We also wanted to make the results approachable for someone who does not work with machine learning. The main page of our interactive dashboard, \textbf{Model Results}, replays the September hold-out (or the user's own test days): for one zone or all four, and any date range, it compares reconstructed with observed prices and reports the error per zone. Three complementary pages help interpret these results:
 \begin{itemize}
-\item \textbf{Understanding the Model:} what the model relies on overall, and one hour broken down step by step (Figure~2).
+\item \textbf{Understanding the Model:} what the model relies on overall, and one hour broken down into baseline, slope, curvature, zigzag and rules, next to the observed prices (Figure~2).
 \item \textbf{Risk Alerts:} the hours to trust less, flagged before their 15-minute prices are known.
 \item \textbf{Data Story:} the patterns in the official data that shaped the model.
 \end{itemize}
@@ -134,8 +128,6 @@ We also wanted to make the results approachable for someone who does not work wi
 \includegraphics[width=0.74\linewidth,trim=0 76bp 0 55bp,clip]{images/dashboard_detail.png}
 \captionof{figure}{Understanding the Model page for ZONE\_0 on 19 September 2026, 18:00--19:00.}
 \end{center}
-
-What we find useful about this view is that it shows what happens behind the final curve: how the baseline, slope, curvature, zigzag and rules contribute to each prediction, including where the model still makes mistakes.
 
 The risk flags use hourly ramps, daily price variability and recent historical reconstruction difficulty, and name the main signal behind each label. They are \textbf{heuristics, not calibrated confidence probabilities}.
 
