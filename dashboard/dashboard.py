@@ -7,10 +7,16 @@ Run from the repository root, on its own or as the Model Results page of dashboa
     python -m pip install -r requirements.txt
     PYTHONPATH=. python -m streamlit run dashboard/dashboard.py --server.address localhost
     # official CSV elsewhere:  ... --server.address localhost -- --train path/to/train_prices_15min.csv
+    # your own test days:      ... --server.address localhost -- --history history_15min.csv \
+    #                              --truth truth_15min.csv [--hourly test_hourly.csv] [--predictions predictions.csv]
 
 Shows the frozen model trained through 31 Aug 2026 (artifacts_september_assessment, committed) on 1-30 Sep 2026.
 Each date is replayed with quarter-hours strictly before it. Nothing is trained, tuned or written to disk;
 the risk reference is the frozen heuristic of `aet.volatility` (training slice through 31 Jul 2026).
+
+With --truth, the dashboard instead replays the supplied test days with the submission model (artifacts_official,
+or --model): history from --history, hourly prices from --hourly (or the truth's hourly means) and, if given,
+the reconstruction written by `aet.infer` (--predictions) as the model line.
 """
 from __future__ import annotations
 
@@ -24,14 +30,16 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from aet.cube import QuarterCube
+from aet.cube import HourlyCube, QuarterCube
 from aet.history import HistoryStore
 from intervals import band, chance_within, load_table   # dashboard/intervals.py
 from aet.pipeline import ShapePipeline
+from aet.schema import read_hourly, read_quarter_hourly
 from aet.volatility import ShapeRisk, risk_inputs
 
 ROOT = Path(__file__).resolve().parent.parent          # repository root (parent of dashboard/)
 ASSESSMENT_MODEL = str(ROOT / "artifacts_september_assessment")   # trained through 2026-08-31; absolute path
+OFFICIAL_MODEL = str(ROOT / "artifacts_official")                # trained through 2026-09-30: for later test days
 INTERVALS = str(Path(__file__).parent / "september_80.json")   # dashboard/intervals.py, calibrated on Jan-Aug folds
 FIRST_DAY, LAST_DAY = "2026-09-01", "2026-09-30"
 RISK_TRAINING_END = "2026-07-31"                      # same slice as `aet.volatility diagnose`
@@ -71,7 +79,6 @@ def zone_name(zone: str) -> str:
 def visible_bands(show: dict):
     return [(lo, hi, name, alpha) for lo, hi, name, alpha, key in BANDS if show[key]]
 PERIODS = ["Day", "Week", "Month", "Custom"]
-WEEKS = {"1–7": (1, 7), "8–14": (8, 14), "15–21": (15, 21), "22–28": (22, 28), "29–30": (29, 30)}   # September days
 WITHIN = 5.0                             # EUR/MWh: "chance the actual price lands within ± this of the prediction"
 
 # Basis components of the learned correction, in model order, with plain-language meaning.
@@ -123,32 +130,69 @@ def colours() -> dict:
 
 
 # ------------------------------------------------------------------ data
+def cli() -> argparse.Namespace:
+    """Options after `--` on the streamlit command line (all optional)."""
+    parser = argparse.ArgumentParser(add_help=False)
+    for option in ("--train", "--model", "--history", "--truth", "--hourly", "--predictions"):
+        parser.add_argument(option)
+    return parser.parse_known_args()[0]
+
+
+def custom_mode() -> bool:
+    """True when the user supplied their own test days (--truth) instead of the September replay."""
+    return cli().truth is not None
+
+
+def model_dir() -> str:
+    return cli().model or (OFFICIAL_MODEL if custom_mode() else ASSESSMENT_MODEL)
+
+
 def train_csv_path() -> Path:
     """--train after `--` on the streamlit command line, then $AET_TRAIN_CSV, then the usual locations."""
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--train")
-    explicit = parser.parse_known_args()[0].train or os.environ.get("AET_TRAIN_CSV")
+    explicit = cli().train or os.environ.get("AET_TRAIN_CSV")
     for candidate in ([explicit] if explicit else TRAIN_CSV_CANDIDATES):
         if Path(candidate).is_file():
             return Path(candidate)
     raise FileNotFoundError(explicit or " or ".join(TRAIN_CSV_CANDIDATES))
 
 
-def require_assessment_model() -> None:
-    """Stop with a readable message if the September hold-out model is missing (see dashboard/README.md)."""
-    if not Path(ASSESSMENT_MODEL, "manifest.json").is_file():
-        st.error(f"Hold-out model not found in `{ASSESSMENT_MODEL}`. Regenerate it with the commands in "
-                 "dashboard/README.md (trained through 2026-08-31).")
+def require_model() -> None:
+    """Stop with a readable message if the model folder is missing (see dashboard/README.md)."""
+    if not Path(model_dir(), "manifest.json").is_file():
+        st.error(f"Model not found in `{model_dir()}`. Pass `-- --model PATH`, or regenerate the September "
+                 "hold-out model with the commands in dashboard/README.md (trained through 2026-08-31).")
         st.stop()
 
 
-def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray):
+def load_results() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Quarter and hour rows of the September replay or, with --truth, of the user's own test days."""
+    try:
+        path = str(train_csv_path())
+    except FileNotFoundError as exc:
+        st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
+        st.stop()
+    require_model()
+    if not custom_mode():
+        return load_assessment(path)
+    args = cli()
+    if not args.history:
+        st.error("`--truth` also needs `--history history_15min.csv` (the 15-minute prices before the test days).")
+        st.stop()
+    try:
+        return load_custom(path, model_dir(), args.history, args.truth, args.hourly, args.predictions)
+    except (OSError, ValueError) as exc:
+        st.error(f"Could not load your test data: {exc}")
+        st.stop()
+
+
+def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray, final: np.ndarray | None = None):
     """H [zone, 24] -> (store, baseline [zone,24,4], {component: [zone,24,4]}, final [zone,24,4]).
 
     final = baseline + residual_scale * sum_j coefficient_j * basis_j, then the pipeline's fixed
     post-processing (zone coupling, partial tie, sign floor/ceiling) and exact hourly-mean projection.
     The components are the learned correction split per basis vector plus "rules", the remainder
-    added by post-processing, so baseline + all components = final.
+    added by post-processing, so baseline + all components = final. A supplied `final` (e.g. the
+    predictions written by `aet.infer`) replaces the recomputed one.
     """
     H1 = H[None]
     base = pipe.baseline(H1)
@@ -158,7 +202,8 @@ def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray)
     scale = pipe.config.residual_scale
     parts = {name: (scale * coefficients[:, [j]] * pipe.basis[:, j][None, :]).reshape(H.shape + (4,))
              for j, name in enumerate(COMPONENTS)}
-    final, _ = pipe.predict_day(day, H, history)
+    if final is None:
+        final, _ = pipe.predict_day(day, H, history)
     parts["rules"] = final - base[0] - sum(parts.values())
     return store, base[0], parts, final
 
@@ -170,9 +215,53 @@ def load_assessment(path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     pipe, stored = ShapePipeline.load(ASSESSMENT_MODEL)
     cube = QuarterCube.from_long(prices, pipe.zones)
     history = stored.merge(cube)                     # predict_day only reads dates before each target
-    risk = ShapeRisk.fit(QuarterCube.from_long(prices[prices.delivery_date <= RISK_TRAINING_END], pipe.zones),
-                         pipe.config)
     days = cube.dates[(cube.dates >= np.datetime64(FIRST_DAY)) & (cube.dates <= np.datetime64(LAST_DAY))]
+    actual = cube.values[np.searchsorted(cube.dates, days)]
+    return replay(pipe, history, fit_risk(prices, pipe), days, actual, actual.mean(axis=-1))
+
+
+@st.cache_data(show_spinner="Replaying your test days with the frozen model...")
+def load_custom(train: str, model: str, history_path: str, truth_path: str, hourly_path: str | None,
+                predictions_path: str | None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The user's own test days. History is merged over the model's stored prices exactly as in `aet.infer`;
+    the truth is used only to score and draw the actual prices, never as history."""
+    pipe, stored = ShapePipeline.load(model)
+    history = stored.merge(QuarterCube.from_long(read_quarter_hourly(history_path, strict=False), pipe.zones))
+    truth = QuarterCube.from_long(read_quarter_hourly(truth_path), pipe.zones)
+    days, actual = truth.dates, truth.values
+    if not len(days) or not np.isfinite(actual).all():
+        raise ValueError(f"{truth_path}: every test day needs all 96 quarter-hours for zones {', '.join(pipe.zones)}")
+
+    def on_test_days(cube, name: str) -> np.ndarray:
+        missing = np.setdiff1d(days, cube.dates)
+        if len(missing):
+            raise ValueError(f"{name}: no rows for the test days {', '.join(map(str, missing))}")
+        values = cube.values[np.searchsorted(cube.dates, days)]
+        if not np.isfinite(values).all():
+            raise ValueError(f"{name}: incomplete rows for the test days in {truth_path}")
+        return values
+
+    H = actual.mean(axis=-1)
+    if hourly_path:
+        H = on_test_days(HourlyCube.from_long(read_hourly(hourly_path), pipe.zones), hourly_path)
+    predicted = None
+    if predictions_path:
+        pred = pd.read_csv(predictions_path)
+        pred["delivery_date"] = pd.to_datetime(pred["delivery_date"])
+        predicted = on_test_days(QuarterCube.from_long(pred, pipe.zones, "predicted_price_eur_mwh"), predictions_path)
+    prices = pd.read_csv(train, dtype={"delivery_date": str})
+    return replay(pipe, history, fit_risk(prices, pipe), days, actual, H, predicted)
+
+
+def fit_risk(prices: pd.DataFrame, pipe: ShapePipeline) -> ShapeRisk:
+    """The frozen risk heuristic: reference scales from the training slice through RISK_TRAINING_END."""
+    return ShapeRisk.fit(QuarterCube.from_long(prices[prices.delivery_date <= RISK_TRAINING_END], pipe.zones),
+                         pipe.config)
+
+
+def replay(pipe: ShapePipeline, history: QuarterCube, risk: ShapeRisk, days: np.ndarray, actual: np.ndarray,
+           hourly: np.ndarray, predicted: np.ndarray | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """actual [day, zone, 24, 4], hourly [day, zone, 24], optional predicted [day, zone, 24, 4] per day in `days`."""
     # Uncertainty: the calibrated error distribution per zone x hour x quarter gives a 90% band (outer),
     # a 50% band (inner) and the chance of landing within ±WITHIN of the prediction. NaN if not calibrated.
     empty = np.full((len(pipe.zones), 24, 4), np.nan)
@@ -182,10 +271,9 @@ def load_assessment(path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         unc["chance"] = chance_within(table["percentiles"], WITHIN)
     zone_idx, hour_idx, quarter_idx = np.meshgrid(np.arange(len(pipe.zones)), np.arange(24), np.arange(4), indexing="ij")
     quarter_frames, hour_frames = [], []
-    for day in days:
-        actual = cube.values[np.searchsorted(cube.dates, day)]
-        H = actual.mean(axis=-1)
-        store, base, parts, final = decompose_day(pipe, history, day, H)
+    for i, day in enumerate(days):
+        H = hourly[i]
+        store, base, parts, final = decompose_day(pipe, history, day, H, None if predicted is None else predicted[i])
         start = pd.Timestamp(str(day))
         quarter_frames.append(pd.DataFrame({
             "delivery_date": str(day),
@@ -194,7 +282,7 @@ def load_assessment(path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
             "quarter_index": quarter_idx.ravel() + 1,
             "timestamp": start + pd.to_timedelta(hour_idx.ravel() * 60 + quarter_idx.ravel() * 15, unit="min"),
             "hourly": np.repeat(H[..., None], 4, axis=-1).ravel(),
-            "actual": actual.ravel(),
+            "actual": actual[i].ravel(),
             "baseline": base.ravel(),
             "model": final.ravel(),
             "range_lo": (final + unc["lo90"]).ravel(),    # 90% band
@@ -417,16 +505,34 @@ def decomposition_chart(hour_rows: pd.DataFrame, c: dict) -> go.Figure:
     return fig
 
 # ------------------------------------------------------------------ page
-def _shift_day(step: int) -> None:
-    first, last = pd.Timestamp(FIRST_DAY).date(), pd.Timestamp(LAST_DAY).date()
-    st.session_state.day = min(max(st.session_state.day + pd.Timedelta(days=step).to_pytimedelta(), first), last)
+def _shift_day(step: int, days: list) -> None:
+    """Previous / next day that has data (test days need not be consecutive)."""
+    later = [d for d in days if d > st.session_state.day]
+    earlier = [d for d in days if d < st.session_state.day]
+    if step > 0 and later:
+        st.session_state.day = later[0]
+    elif step < 0 and earlier:
+        st.session_state.day = earlier[-1]
 
 
-def control_bar(zones: list[str]) -> tuple[str, pd.Timestamp, pd.Timestamp, dict]:
+def weeks(first, last) -> dict:
+    """Consecutive 7-day blocks from the first day: label -> (start, end)."""
+    blocks, start = {}, first
+    while start <= last:
+        end = min(start + pd.Timedelta(days=6).to_pytimedelta(), last)
+        blocks[f"{start.day}–{end.day}" if start.month == end.month else f"{start:%d %b}–{end:%d %b}"] = (start, end)
+        start = end + pd.Timedelta(days=1).to_pytimedelta()
+    return blocks
+
+
+def control_bar(zones: list[str], dates: list[str]) -> tuple[str, pd.Timestamp, pd.Timestamp, dict]:
     """Zone, period and what to show, in one bordered box above the charts."""
-    first, last = pd.Timestamp(FIRST_DAY).date(), pd.Timestamp(LAST_DAY).date()
-    for key, value in (("day", first), ("zone", ALL), ("period", PERIODS[0]), ("week", next(iter(WEEKS))),
-                       ("custom_range", (first, pd.Timestamp("2026-09-07").date())), ("show", list(DEFAULT_SHOW))):
+    days = [pd.Timestamp(d).date() for d in dates]
+    first, last = days[0], days[-1]
+    week_blocks = weeks(first, last)
+    for key, value in (("day", first), ("zone", ALL), ("period", PERIODS[0]), ("week", next(iter(week_blocks))),
+                       ("custom_range", (first, min(first + pd.Timedelta(days=6).to_pytimedelta(), last))),
+                       ("show", list(DEFAULT_SHOW))):
         st.session_state.setdefault(key, value)
     with st.container(border=True):
         zone_col, period_col, pick_col = st.columns([1.5, 1.05, 1.45], gap="small", vertical_alignment="bottom")
@@ -437,17 +543,18 @@ def control_bar(zones: list[str]) -> tuple[str, pd.Timestamp, pd.Timestamp, dict
             if period == "Day":
                 back, day, forward = st.columns([1, 5, 1], vertical_alignment="bottom")
                 back.button(":material/chevron_left:", key="prev_day", help="Previous day", on_click=_shift_day,
-                            args=(-1,), disabled=st.session_state.day <= first, **STRETCH)
+                            args=(-1, days), disabled=st.session_state.day <= first, **STRETCH)
                 day.date_input("Day", min_value=first, max_value=last, key="day", format="DD/MM/YYYY")
                 forward.button(":material/chevron_right:", key="next_day", help="Next day", on_click=_shift_day,
-                               args=(1,), disabled=st.session_state.day >= last, **STRETCH)
+                               args=(1, days), disabled=st.session_state.day >= last, **STRETCH)
                 start = end = st.session_state.day
             elif period == "Week":
-                week = st.segmented_control("Week", list(WEEKS), key="week") \
-                    or next(iter(WEEKS))
-                start, end = (pd.Timestamp(f"2026-09-{d:02d}").date() for d in WEEKS[week])
+                week = st.segmented_control("Week", list(week_blocks), key="week") \
+                    or next(iter(week_blocks))
+                start, end = week_blocks[week]
             elif period == "Month":
-                st.markdown("**1 – 30 September 2026** · the whole held-out month")
+                st.markdown(f"**{first:%d %b} – {last:%d %b %Y}** · all {len(days)} supplied test days" if custom_mode()
+                            else "**1 – 30 September 2026** · the whole held-out month")
                 start, end = first, last
             else:
                 picked = st.date_input("Date range", min_value=first, max_value=last, key="custom_range", format="DD/MM/YYYY")
@@ -622,25 +729,26 @@ def inject_style(c: dict) -> None:
 def main(standalone: bool = False) -> None:
     st.set_option("client.toolbarMode", "minimal")   # no Deploy button or developer menu
     st.set_page_config(page_title="Quarter-hour prices", page_icon="⚡", layout="wide")
-    try:
-        path = str(train_csv_path())
-    except FileNotFoundError as exc:
-        st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
-        st.stop()
-    require_assessment_model()
-    quarters, hours_all = load_assessment(path)
+    quarters, hours_all = load_results()
     c = colours()
 
     inject_style(c)
     st.markdown("<div class='hero-title'>Quarter-hour price reconstruction</div>"
                 "<div class='hero-sub'>From 24 hourly prices to 96 quarter-hour prices.</div>",
                 unsafe_allow_html=True)
+    if custom_mode():
+        source = "predictions from your file" if cli().predictions else "predictions recomputed by the dashboard"
+        st.markdown(f"<div class='hero-meta'>Your test data · {quarters.delivery_date.nunique()} days · model "
+                    f"<code>{Path(model_dir()).name}</code> · {source}</div>", unsafe_allow_html=True)
 
     zones = sorted(quarters.market_id.unique())
-    zone, start, end, show = control_bar(zones)
+    zone, start, end, show = control_bar(zones, sorted(quarters.delivery_date.unique()))
     show_risk = show["risk"]
     in_period = lambda frame: frame[frame.delivery_date.between(f"{start:%Y-%m-%d}", f"{end:%Y-%m-%d}")]
     all_rows, all_hours = in_period(quarters), in_period(hours_all)
+    if all_rows.empty:
+        st.warning("No test data for the selected dates. Pick another day or period.")
+        st.stop()
     period = f"{start:%d %b}" + (f" – {end:%d %b %Y}" if end > start else f" {start:%Y}")
 
     # Row 1: the price chart(s) on the left, the scores on the right.

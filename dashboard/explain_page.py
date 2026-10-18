@@ -5,7 +5,7 @@
 3. When to trust it: the risk labels of the selected day.
 
 Zone, day and hour are shared with the Model Results page: clicking a point there opens this page with that
-point selected. Same frozen September model as Model Results; nothing is trained or written to disk.
+point selected. Same frozen model as Model Results (September hold-out, or yours with --truth); nothing is trained or written to disk.
 """
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard import (ASSESSMENT_MODEL, COMPONENTS, FONT, MODEL_LABEL, RISK_BADGE, RISK_REASONS, STRETCH,
+from dashboard import (COMPONENTS, FONT, MODEL_LABEL, RISK_BADGE, RISK_REASONS, STRETCH,
                              _style, colours, decomposition_chart, has_range, hour_label, WITHIN,
-                             inject_style, load_assessment, require_assessment_model, train_csv_path, zone_name)
+                             inject_style, load_results, model_dir, zone_name)
 from aet.pipeline import ShapePipeline
 
 GROUPS = {   # short names: shown as chart labels and in the table
@@ -70,9 +70,9 @@ def plain_name(name: str) -> str:
 
 
 @st.cache_data(show_spinner=False)
-def feature_importance() -> pd.DataFrame:
+def feature_importance(model: str) -> pd.DataFrame:
     """Share of the total split gain per feature, for each of the three models (slope, curvature, zigzag)."""
-    pipe, _ = ShapePipeline.load(ASSESSMENT_MODEL)
+    pipe, _ = ShapePipeline.load(model)
     shares = {}
     for name, booster in zip(COMPONENTS, pipe.model.boosters):
         gain = pd.Series(booster.feature_importance(importance_type="gain"), index=booster.feature_name())
@@ -91,7 +91,7 @@ def what_it_relies_on(c: dict) -> None:
                 "per shape: <b>slope</b> (rising or falling inside the hour), <b>curvature</b> (edges vs middle) and "
                 "<b>zigzag</b> (alternating detail). This is how much each one leans on each kind of information."
                 "</div>", unsafe_allow_html=True)
-    table = feature_importance()
+    table = feature_importance(model_dir())
     groups = table.groupby("group")[[*COMPONENTS, "average"]].sum().sort_values("average")
     left, right = st.columns([1, 1.15], gap="large")
     with left:
@@ -120,7 +120,7 @@ def what_it_relies_on(c: dict) -> None:
                 "curve already follows the slope between hours, so the trees mainly learn <i>how strongly</i> to bend it, "
                 "using the price level, the day's swing and how this hour behaved on recent days. Other zones help a "
                 "little; the calendar barely matters.</div>", unsafe_allow_html=True)
-    st.caption("Share of split gain in the frozen September model. It shows what the model uses, not cause and effect.")
+    st.caption("Share of split gain in the frozen model shown here. It shows what the model uses, not cause and effect.")
 
 
 def ensure_hour(rows: pd.DataFrame, dates: list[str]) -> None:
@@ -197,13 +197,7 @@ def render() -> None:
                 f" border-radius: 0 10px 10px 0; font-size: 1.02rem; color: {c['ink']}; }}</style>",
                 unsafe_allow_html=True)
     st.session_state.last_click = None   # a later click on Model Results always opens this page again
-    try:
-        path = str(train_csv_path())
-    except FileNotFoundError as exc:
-        st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
-        st.stop()
-    require_assessment_model()
-    quarters, hours_all = load_assessment(path)
+    quarters, hours_all = load_results()
     st.markdown("<div class='hero-title'>Understanding the model</div>"
                 f"<div class='hero-sub'>Why the {MODEL_LABEL.lower()} looks the way it does.</div>",
                 unsafe_allow_html=True)

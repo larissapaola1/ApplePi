@@ -26,7 +26,13 @@ From the repository root:
 
 ```bash
 python -m pip install -r requirements.txt
-PYTHONPATH=. python -m streamlit run dashboard/app.py --server.address localhost
+python -m streamlit run dashboard/app.py --server.address localhost
 ```
+
+## Your own test days
+
+To see your own test days instead of the September replay, follow
+[View your own test results in the dashboard](../README.md#view-your-own-test-results-in-the-dashboard)
+in the main README.
 
 Nothing is trained, tuned or written to disk by the dashboard.

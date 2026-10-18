@@ -3,7 +3,7 @@
 Reconstruct 96 quarter-hour prices from 24 supplied hourly prices per zone, preserving every
 hourly average within 0.0001 EUR/MWh. This is constrained reconstruction, not hourly forecasting.
 
-The only data source is the official participant package; place it in data/ (see [data/README.md](data/README.md)).
+The only data source is the official participant package, already included in data/ (see [data/README.md](data/README.md)).
 
 ## Team ApplePi
 
@@ -76,7 +76,7 @@ No training is needed. All required model files are in artifacts_official/. See
 
 ## Retrain or reproduce development
 
-Place the official participant dataset in data/ (see [data/README.md](data/README.md)).
+The official participant dataset is already included in data/ (see [data/README.md](data/README.md)).
 
 ```bash
 export TRAIN_CSV="data/train_prices_15min.csv"
@@ -105,9 +105,64 @@ errors. Do not claim the pipeline always writes a compliant file under every fai
 - Report figures: `python -m tools.report_assessment --assessment results/september_assessment --out results/september_report`.
 - Volatility: [docs/experiments/VOLATILITY.md](docs/experiments/VOLATILITY.md). The risk indicator is a separate
   heuristic, not calibrated confidence. Added magnitude features were not promoted.
-- Dashboard: `PYTHONPATH=. python -m streamlit run dashboard/app.py --server.address localhost`; replays held-out
+- Dashboard: `python -m streamlit run dashboard/app.py --server.address localhost`; replays held-out
   September with `artifacts_september_assessment/` (see [dashboard/README.md](dashboard/README.md)). Not part of the inference path.
+  To see your own test days instead, see [below](#view-your-own-test-results-in-the-dashboard).
 - Tests: `python -m pytest -q`.
+
+## View your own test results in the dashboard
+
+You tested the model on your own days and want to see the results as charts. It takes two steps.
+
+**What you need:** three CSV files, all in the repository folder (the folder this README is in).
+
+| File | What it contains |
+|---|---|
+| `test_hourly.csv` | The 24 hourly prices of each day you want to test. |
+| `history_15min.csv` | The real 15-minute prices of the days *before* your test days. |
+| `truth_15min.csv` | The real 15-minute prices of your test days, so the dashboard can tell how close the model came. Same columns as the training file: `delivery_date, market_id, hour_index, quarter_index, price_eur_mwh`. Every test day must be complete: 96 quarter-hours for each of the 4 zones. |
+
+**Step 1: let the model make its predictions.** Run this in the terminal, from the repository folder:
+
+```bash
+python -m aet.infer --hourly test_hourly.csv --history history_15min.csv --model artifacts_official --out predictions.csv
+```
+
+This creates a new file, `predictions.csv`, with the model's 15-minute prices.
+
+**Step 2: open the dashboard with your files.**
+
+```bash
+python -m streamlit run dashboard/app.py --server.address localhost -- \
+  --hourly test_hourly.csv --history history_15min.csv --predictions predictions.csv --truth truth_15min.csv
+```
+
+The dashboard opens in your browser and shows only your test days. You can see the model's error compared with
+simply repeating the hourly price four times (the flat baseline), how each prediction was built, and the hours
+flagged as risky.
+
+**What the parts of the step 2 command mean**
+
+- The lone `--` in the middle: everything after it is for our dashboard, everything before it is for Streamlit,
+  the program that runs the dashboard. Don't leave it out.
+- The `\` at the end of the first line only means "the command continues on the next line".
+- After the `--`, each option is followed by the file you want to use:
+
+| Option | Must I give it? | What it means |
+|---|---|---|
+| `--truth` | Yes | Your file of real 15-minute prices for the test days. The dashboard shows the days in this file. Giving this option is what makes the dashboard show your days instead of our September example. |
+| `--history` | Yes | The same history file you used in step 1. The model looks at recent days to make its predictions. |
+| `--predictions` | No | The `predictions.csv` file made in step 1. If you leave it out, the dashboard makes the predictions again itself. |
+| `--hourly` | No | The same hourly file you used in step 1. If you leave it out, the dashboard averages the real prices in `--truth` instead. Because of rounding, the predictions can then differ very slightly. |
+| `--model` | No | The model to use. Leave it out to use our submitted model (`artifacts_official/`). |
+| `--train` | No | Only needed if you moved `train_prices_15min.csv` out of the `data/` folder: give its new location. |
+
+**Tips**
+
+- If your files are in another folder, write the full path, for example
+  `--truth /Users/me/Downloads/truth_15min.csv`.
+- To stop the dashboard, press `Ctrl+C` in the terminal.
+- The dashboard only reads your files. It does not change them, and it does not retrain the model.
 
 ## Repository layout
 
@@ -124,4 +179,4 @@ errors. Do not claim the pipeline always writes a compliant file under every fai
 | `tests/` | Unit and end-to-end tests (synthetic data, no network) |
 | `tools/` | Official-metric scorer and report figures |
 | `results/` | Curated results table and reproduction commands |
-| `report/`, `presentation/`, `video/` | Deliverables |
+| `report/`, `video/` | Deliverables: 3-page report and video link |

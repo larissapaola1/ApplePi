@@ -2,12 +2,12 @@
 import pandas as pd
 import streamlit as st
 
-from dashboard import (ALL, FIRST_DAY, LAST_DAY, RISK_NOTE, RISK_REASONS, STRETCH, colours, hour_label, inject_style,
-                       kpi_tile, load_assessment, require_assessment_model, train_csv_path, zone_name)
+from dashboard import (ALL, RISK_NOTE, RISK_REASONS, STRETCH, colours, hour_label, inject_style,
+                       kpi_tile, load_results, zone_name)
 
 
-def controls(zones: list[str]) -> tuple[str, pd.Timestamp, pd.Timestamp]:
-    first, last = pd.Timestamp(FIRST_DAY).date(), pd.Timestamp(LAST_DAY).date()
+def controls(zones: list[str], dates: list[str]) -> tuple[str, pd.Timestamp, pd.Timestamp]:
+    first, last = pd.Timestamp(dates[0]).date(), pd.Timestamp(dates[-1]).date()
     st.session_state.setdefault("risk_zone", ALL)
     st.session_state.setdefault("risk_range", (first, last))
     with st.container(border=True):
@@ -29,13 +29,7 @@ def render() -> None:
     import nav   # imported late: nav imports this module
     c = colours()
     inject_style(c)
-    try:
-        path = str(train_csv_path())
-    except FileNotFoundError as exc:
-        st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
-        st.stop()
-    require_assessment_model()
-    quarters, hours_all = load_assessment(path)
+    quarters, hours_all = load_results()
     st.markdown("<div class='hero-title'>Risk alerts</div>"
                 "<div class='hero-sub'>Which hours to trust less, flagged before the 15-minute prices are known.</div>",
                 unsafe_allow_html=True)
@@ -48,7 +42,7 @@ def render() -> None:
         "over the previous 7 and 28 days.")
     st.caption(RISK_NOTE)
 
-    zone, start, end = controls(sorted(quarters.market_id.unique()))
+    zone, start, end = controls(sorted(quarters.market_id.unique()), sorted(quarters.delivery_date.unique()))
     between = lambda frame: frame[frame.delivery_date.between(f"{start:%Y-%m-%d}", f"{end:%Y-%m-%d}")
                                   & ((frame.market_id == zone) if zone != ALL else True)]
     rows, hours = between(quarters), between(hours_all)

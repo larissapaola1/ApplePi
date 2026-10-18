@@ -19,3 +19,6 @@ predictions.csv
 
 # Temporary input for rebuilding artifacts_september_assessment (see dashboard/README.md)
 data/train_through_august.csv
+
+# Assistant instructions (kept locally, not part of the submission)
+CLAUDE.md

@@ -1,7 +1,7 @@
 """Multipage dashboard: what we found, how well it works, why it works.
 
 Run from the repository root:
-    PYTHONPATH=. python -m streamlit run dashboard/app.py --server.address localhost
+    python -m streamlit run dashboard/app.py --server.address localhost
 or from dashboard/ (the repository root is added to sys.path below):
     python -m streamlit run app.py --server.address localhost
 """
