@@ -42,7 +42,6 @@ TRAIN_CSV_CANDIDATES = (                              # anchored to the reposito
 )
 
 MODEL_LABEL = "Model Price Prediction"   # display name of the final reconstructed price (chart line)
-MODEL_ID = "AET model: PCHIP + LightGBM · trained through 31 Aug 2026"   # distinguishes it from other models tested
 RISK_NOTE = "Risk labels are heuristic indicators of difficult conditions, not anomaly probabilities."
 FLAT_COMPARISON_HELP = (
     "**Flat baseline:** repeat the supplied hourly average price for all four 15-minute prices. "
@@ -217,12 +216,6 @@ def zone_mae(rows: pd.DataFrame, column: str) -> float:
     return float((rows[column] - rows.actual).abs().groupby(rows.delivery_date).mean().mean())
 
 
-def hourly_errors(rows: pd.DataFrame) -> pd.DataFrame:
-    """Model MAE per date and hour (mean over the four quarters)."""
-    return (rows.assign(error=(rows.model - rows.actual).abs())
-            .groupby(["delivery_date", "hour_index"], as_index=False).error.mean())
-
-
 def hour_label(hour: int) -> str:
     return f"{hour - 1:02d}:00–{hour % 24:02d}:00" if hour < 24 else "23:00–24:00"
 
@@ -362,54 +355,66 @@ def zones_chart(rows: pd.DataFrame, hours: pd.DataFrame, show: dict, show_risk: 
 
 
 def decomposition_chart(hour_rows: pd.DataFrame, c: dict) -> go.Figure:
-    """One small waterfall per quarter: hourly price -> + each part -> prediction, with the actual price."""
+    """One small bar chart per quarter: hourly price -> + each part -> prediction, next to the actual price.
+
+    Each bar starts where the previous one ended. Quarters in a 2 x 2 grid leave room for level step names
+    and a value label on every bar; parts under 0.5 €/MWh show a muted "0". Prediction and actual sit side
+    by side instead of on top of each other.
+    """
     steps = ["smooth", *COMPONENTS, "rules"]
-    # Four quarters side by side; step labels are tilted so they stay large in the narrow panels.
-    fig = make_subplots(rows=1, cols=4, shared_yaxes=True, horizontal_spacing=0.03,
-                        subplot_titles=[f"Q{q} · :{(q - 1) * 15:02d}–:{q * 15 % 60:02d}" for q in range(1, 5)])
-    for q, row in enumerate(hour_rows.sort_values("quarter_index").itertuples()):
-        cell = dict(row=1, col=q + 1)
+    x_steps = list(range(len(steps)))                  # numeric x so prediction and actual can sit side by side
+    x_pred, x_actual = len(steps) - 0.15, len(steps) + 0.35
+    ticks = dict(tickvals=[*x_steps, len(steps) + 0.1], ticktext=[*(SHORT_LABELS[s] for s in steps), "Result"])
+    quarters = list(hour_rows.sort_values("quarter_index").itertuples())
+    fig = make_subplots(rows=2, cols=2, shared_yaxes=True, horizontal_spacing=0.04, vertical_spacing=0.12,
+                        subplot_titles=[f"Q{q}" for q in range(1, 5)])
+    for q, row in enumerate(quarters):
+        cell = dict(row=q // 2 + 1, col=q % 2 + 1)
         level = row.hourly
-        for step in steps:
+        for x, step in zip(x_steps, steps):
             delta = getattr(row, step)
-            fig.add_bar(x=[SHORT_LABELS[step]], y=[delta], base=[level], name=PART_LABELS[step],
-                        marker=dict(color=c[step], cornerradius=4), legendgroup=step, showlegend=q == 0,
-                        text=[f"{delta:+.1f}"], textposition="outside", constraintext="none",
-                        textfont=dict(color=c["ink"], size=FONT["small"] - 2), cliponaxis=False,
+            small = abs(delta) < 0.5
+            fig.add_bar(x=[x], y=[delta], base=[level], name=PART_LABELS[step], width=0.6, showlegend=False,
+                        marker=dict(color=c[step], cornerradius=3),
+                        text=["0" if small else f"{delta:+.1f}"], textposition="outside", constraintext="none",
+                        cliponaxis=False, textangle=0,
+                        textfont=dict(color=c["ink2"] if small else c["ink"], size=FONT["small"] - 2),
                         hovertemplate=f"{PART_LABELS[step]}: %{{y:+.2f}} €/MWh<extra></extra>", **cell)
             level += delta
         whisker = {}
         if np.isfinite(row.range_lo):   # 90% band as a whisker on the prediction
             whisker = dict(error_y=dict(type="data", symmetric=False, array=[row.range_hi - row.model],
-                                        arrayminus=[row.model - row.range_lo], color=c["model"], thickness=2, width=8))
-        fig.add_scatter(x=["Result"], y=[row.model], mode="markers", name=MODEL_LABEL, legendgroup="model",
+                                        arrayminus=[row.model - row.range_lo], color=c["model"], thickness=2, width=6))
+        fig.add_scatter(x=[x_pred], y=[row.model], mode="markers", name=MODEL_LABEL, legendgroup="model",
                         showlegend=q == 0, marker=dict(symbol="diamond", size=14, color=c["model"]),
                         customdata=[[row.range_lo, row.range_hi]],
                         hovertemplate=f"{MODEL_LABEL}: %{{y:.2f}} €/MWh"
                                       + ("<br>90% band: %{customdata[0]:.2f} – %{customdata[1]:.2f}"
                                          if whisker else "") + "<extra></extra>", **whisker, **cell)
-        fig.add_scatter(x=["Result"], y=[row.actual], mode="markers", name="Actual 15-min price", legendgroup="actual",
+        fig.add_scatter(x=[x_actual], y=[row.actual], mode="markers", name="Actual 15-min price", legendgroup="actual",
                         showlegend=q == 0, marker=dict(symbol="circle", size=11, color=c["ink"],
                                                        line=dict(color=c["surface"], width=2)),
                         hovertemplate="Actual: %{y:.2f} €/MWh<extra></extra>", **cell)
-    fig.update_annotations(font=dict(color=c["ink2"], size=FONT["base"]))   # quarter titles
-    for q, row in enumerate(hour_rows.sort_values("quarter_index").itertuples()):
+    # Legend entry for the hourly price line (the line itself is a shape, which has no legend).
+    fig.add_scatter(x=[None], y=[None], mode="lines", name="Hourly price (input)",
+                    line=dict(color=c["hourly"], width=2), row=1, col=1)
+    fig.update_annotations(font=dict(color=c["ink"], size=FONT["base"]))   # quarter titles
+    for q, row in enumerate(quarters):
         # Added after the traces: plotly skips shapes on subplots that are still empty.
-        label = dict(annotation_text="hourly price", annotation_position="bottom left",
-                     annotation_font=dict(color=c["hourly"], size=FONT["small"])) if q == 0 else {}
-        fig.add_hline(y=row.hourly, line=dict(color=c["hourly"], width=2), layer="below", row=1, col=q + 1, **label)
+        fig.add_hline(y=row.hourly, line=dict(color=c["hourly"], width=2), layer="below",
+                      row=q // 2 + 1, col=q % 2 + 1)
     values = np.r_[hour_rows.hourly, hour_rows.model, hour_rows.actual, hour_rows.baseline,
                    hour_rows.range_lo, hour_rows.range_hi]
     values = values[np.isfinite(values)]
-    pad = max(2.0, 0.25 * (values.max() - values.min()))
+    pad = max(4.0, 0.12 * (values.max() - values.min()))   # room for the labels above and below the bars
     fig.update_yaxes(range=[values.min() - pad, values.max() + pad])
-    fig.update_yaxes(title="€/MWh", row=1, col=1)
-    fig.update_layout(barmode="overlay", bargap=0.35)
-    fig = _style(fig, c, 560)
-    fig.update_layout(margin=dict(t=40, b=40), legend=dict(yanchor="top", y=-0.22))
-    fig.update_xaxes(tickangle=-40)
+    fig.update_yaxes(title="€/MWh", col=1)
+    fig.update_xaxes(range=[-0.6, len(steps) + 0.75], showgrid=False, tickangle=0, **ticks)
+    fig.update_layout(barmode="overlay")
+    fig = _style(fig, c, 720)
+    fig.update_xaxes(tickfont=dict(size=FONT["small"] - 2))
+    fig.update_layout(margin=dict(l=10, r=10, t=70, b=10), legend=dict(orientation="h", yanchor="bottom", y=1.05, x=0))
     return fig
-
 
 # ------------------------------------------------------------------ page
 def _shift_day(step: int) -> None:
@@ -582,50 +587,6 @@ def pick_hour(rows: pd.DataFrame, dates: list[str]) -> tuple[str, int]:
     return date, hour
 
 
-def explain_reading(hour_rows: pd.DataFrame) -> None:
-    error = (hour_rows.model - hour_rows.actual).abs().mean()
-    st.markdown("**How to read it.** Each 15-minute price starts from the hourly price (red line). "
-                f"The bars add five parts to it; the result is the {MODEL_LABEL.lower()} (◆), "
-                "compared with the actual price (●).")
-    chance_html = ""
-    if has_range(hour_rows):
-        inside = int(((hour_rows.actual >= hour_rows.range_lo) & (hour_rows.actual <= hour_rows.range_hi)).sum())
-        below = float((hour_rows.range_lo - hour_rows.model).mean())
-        above = float((hour_rows.range_hi - hour_rows.model).mean())
-        chance_html = (
-            f"<div class='kpi'><div class='kpi-label'>Historical share within ±{WITHIN:.0f} €/MWh, this hour</div>"
-            f"<div class='kpi-value'>{hour_rows.chance.mean() * 100:.0f}<span class='kpi-unit'>%</span></div>"
-            f"<div class='kpi-note'>from Jan–Aug errors at this zone and hour · 90% range {below:+.1f} to "
-            f"{above:+.1f} €/MWh around the prediction (green whiskers) · {inside} of 4 actual prices inside</div></div>")
-    st.markdown(f"<div class='kpi' style='margin-top:0.6rem'><div class='kpi-label'>Error this hour</div>"
-                f"<div class='kpi-value'>{error:.2f}<span class='kpi-unit'> €/MWh</span></div></div>{chance_html}",
-                unsafe_allow_html=True)
-
-
-def explain_risk(zone, start, end, rows, hours) -> None:
-    st.subheader("Risk: how much to trust each hour")
-    st.markdown(
-        "Every hour of every day gets its own label, for the selected zone, using only what is known before that "
-        "day's 15-minute prices: the day's hourly prices and the previous days. Three signals are combined:\n"
-        "1. **Hourly ramp:** how fast the hourly price changes around this hour.\n"
-        "2. **Day volatility:** how much the 24 hourly prices swing during the day.\n"
-        "3. **Recent difficulty:** how far the actual 15-minute prices moved away from the smooth curve at this hour "
-        "over the previous 7 and 28 days.")
-    st.caption(RISK_NOTE)
-    period = f"{start:%d %b}" + (f" – {end:%d %b}" if end > start else "")
-    st.markdown(f"**High-risk hours · {zone} · {period}**")
-    risky = hours[hours.risk_label == "high"]
-    if risky.empty:
-        st.markdown("🟢 No high-risk hours in this selection.")
-        return
-    errors = hourly_errors(rows).set_index(["delivery_date", "hour_index"]).error
-    st.dataframe(pd.DataFrame({
-        "Day": risky.delivery_date, "Hour": risky.hour_index.map(hour_label), "Risk": "⚠️ High",
-        "Main reason": risky.dominant_signal.map(RISK_REASONS),
-        "Model error (€/MWh)": [round(errors.loc[(d, h)], 2) for d, h in zip(risky.delivery_date, risky.hour_index)],
-    }), hide_index=True, **STRETCH)
-
-
 def inject_style(c: dict) -> None:
     """Shared page styling (also used by the Data Story page)."""
     # Streamlit sizes text in rem, so a larger root font scales the whole page.
@@ -649,6 +610,10 @@ def inject_style(c: dict) -> None:
         ".kpi-hero .kpi-value { font-size: 3rem; }"
         f".kpi-unit {{ font-size: 0.95rem; font-weight: 400; color: {c['ink2']}; margin-left: 0.15rem; }}"
         ".kpi-note { font-size: 0.95rem; margin-top: 0.2rem; }"
+        ".reliability .kpi-value { margin: 0.25rem 0; font-size: 2.5rem; }"
+        ".reliability-summary { font-size: 0.9rem; line-height: 1.45; margin-top: 0.2rem; }"
+        f".reliability-note {{ font-size: 0.78rem; line-height: 1.5; color: {c['ink2']}; margin-top: 0.45rem; }}"
+        f".reliability-result {{ border-top: 1px solid {c['grid']}; margin-top: 0.85rem; padding-top: 0.75rem; }}"
         ".kpi-arrow { font-size: 1.35rem; line-height: 1; vertical-align: -0.12rem; }"
         f".section-sub {{ font-size: 1.05rem; color: {c['ink2']}; margin: -0.4rem 0 1.2rem; }}"
         "</style>", unsafe_allow_html=True)
@@ -668,9 +633,8 @@ def main(standalone: bool = False) -> None:
 
     inject_style(c)
     st.markdown("<div class='hero-title'>Quarter-hour price reconstruction</div>"
-                "<div class='hero-sub'>From 24 hourly prices to 96 quarter-hour prices.</div>"
-                f"<div class='hero-meta'>{MODEL_ID} · evaluated on held-out September 2026 · "
-                "each day uses only earlier data</div>", unsafe_allow_html=True)
+                "<div class='hero-sub'>From 24 hourly prices to 96 quarter-hour prices.</div>",
+                unsafe_allow_html=True)
 
     zones = sorted(quarters.market_id.unique())
     zone, start, end, show = control_bar(zones)

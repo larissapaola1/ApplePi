@@ -16,8 +16,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from dashboard import (ASSESSMENT_MODEL, COMPONENTS, FONT, MODEL_ID, MODEL_LABEL, RISK_BADGE, RISK_REASONS, STRETCH,
-                             _style, colours, decomposition_chart, explain_reading, explain_risk, hour_label,
+from dashboard import (ASSESSMENT_MODEL, COMPONENTS, FONT, MODEL_LABEL, RISK_BADGE, RISK_REASONS, STRETCH,
+                             _style, colours, decomposition_chart, has_range, hour_label, WITHIN,
                              inject_style, load_assessment, require_assessment_model, train_csv_path, zone_name)
 from aet.pipeline import ShapePipeline
 
@@ -132,6 +132,28 @@ def ensure_hour(rows: pd.DataFrame, dates: list[str]) -> None:
     st.session_state.setdefault("explain_hour", 1)
 
 
+def explain_reading(hour_rows: pd.DataFrame) -> None:
+    error = (hour_rows.model - hour_rows.actual).abs().mean()
+    chance_html = ""
+    if has_range(hour_rows):
+        inside = int(((hour_rows.actual >= hour_rows.range_lo) & (hour_rows.actual <= hour_rows.range_hi)).sum())
+        below = float((hour_rows.range_lo - hour_rows.model).mean())
+        above = float((hour_rows.range_hi - hour_rows.model).mean())
+        chance_html = (
+            "<div class='kpi reliability'><div class='kpi-label'>Historical accuracy</div>"
+            f"<div class='kpi-value'>{hour_rows.chance.mean() * 100:.0f}<span class='kpi-unit'>%</span></div>"
+            f"<div class='reliability-summary'>within ±{WITHIN:.0f} €/MWh of the actual price</div>"
+            "<div class='reliability-note'>Jan–Aug · same zone and hour<br>Average across Q1–Q4</div>"
+            "<div class='reliability-result'><div class='kpi-label'>Selected hour</div>"
+            f"<div class='reliability-summary'><strong>{inside} of {len(hour_rows)}</strong> actual prices inside "
+            "the 90% ranges</div>"
+            "<div class='reliability-note'>Green whiskers show each quarter’s range.<br>"
+            f"Average range: {below:+.1f} to {above:+.1f} €/MWh relative to the prediction.</div></div></div>")
+    st.markdown(f"<div class='kpi' style='margin-top:0.6rem'><div class='kpi-label'>Error this hour</div>"
+                f"<div class='kpi-value'>{error:.2f}<span class='kpi-unit'> €/MWh</span></div></div>{chance_html}",
+                unsafe_allow_html=True)
+
+
 def one_prediction(quarters: pd.DataFrame, hours_all: pd.DataFrame, c: dict):
     st.subheader("One prediction, step by step")
     st.markdown("<div class='section-sub'>Pick any zone, day and hour, or click a point on the Model Results page. "
@@ -158,7 +180,11 @@ def one_prediction(quarters: pd.DataFrame, hours_all: pd.DataFrame, c: dict):
         st.markdown(f"**{RISK_BADGE[label]}**" + (f"  \n{reason.capitalize()}." if reason else ""))
         explain_reading(hour_rows)
     with right:
-        st.markdown(f"**{zone_name(zone)} · {pd.Timestamp(date):%a %d %b %Y} · {hour_label(hour)}**")
+        st.markdown(f"<div class='kpi-heading' style='font-size:1.15rem'>Contribution of each part to the "
+                    f"15-minute prices <span>· {zone_name(zone)} · {pd.Timestamp(date):%a %d %b %Y} · "
+                    f"{hour_label(hour)}</span></div>", unsafe_allow_html=True)
+        st.caption("Each bar is one part, in €/MWh, added to the hourly price (red line) from left to right; "
+                   "Q1–Q4 are the four 15-minute quarters of the hour.")
         st.plotly_chart(decomposition_chart(hour_rows, c), key="decomposition", **STRETCH)
     return zone, date, rows, hours
 
@@ -179,14 +205,11 @@ def render() -> None:
     require_assessment_model()
     quarters, hours_all = load_assessment(path)
     st.markdown("<div class='hero-title'>Understanding the model</div>"
-                f"<div class='hero-sub'>Why the {MODEL_LABEL.lower()} looks the way it does.</div>"
-                f"<div class='hero-meta'>{MODEL_ID} · same model as Model Results · "
-                "explained on held-out September 2026</div>", unsafe_allow_html=True)
+                f"<div class='hero-sub'>Why the {MODEL_LABEL.lower()} looks the way it does.</div>",
+                unsafe_allow_html=True)
+    one_prediction(quarters, hours_all, c)
+    st.divider()
     what_it_relies_on(c)
     st.divider()
-    zone, date, rows, hours = one_prediction(quarters, hours_all, c)
-    st.divider()
-    day = pd.Timestamp(date)
-    explain_risk(zone_name(zone), day, day, rows[rows.delivery_date == date], hours[hours.delivery_date == date])
-    st.divider()
+    st.page_link(nav.RISK_ALERTS, label="Risk Alerts: which hours to trust less", icon=":material/warning:")
     st.page_link(nav.MODEL_RESULTS, label="Back to Model Results", icon=":material/arrow_back:")
