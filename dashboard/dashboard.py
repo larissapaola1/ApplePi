@@ -4,7 +4,7 @@ Adds "All" to the zone switcher: the official score (mean of the per-zone MAEs),
 one price panel per zone. Zone prices are never averaged: the zones are different markets.
 
 Run from the repository root, on its own or as the Model Results page of dashboard/app.py:
-    python -m pip install -r requirements.txt -r requirements-dashboard.txt
+    python -m pip install -r requirements.txt
     PYTHONPATH=. python -m streamlit run dashboard/dashboard.py --server.address localhost
     # official CSV elsewhere:  ... --server.address localhost -- --train path/to/train_prices_15min.csv
 

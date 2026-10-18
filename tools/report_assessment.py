@@ -1,7 +1,7 @@
 """Report existing held-out predictions; never train, tune, or change model artifacts.
 
 python -m tools.report_assessment --assessment results/september_assessment
-Requires the optional requirements-analysis.txt dependencies.
+Requires matplotlib (included in requirements.txt).
 """
 from __future__ import annotations
 

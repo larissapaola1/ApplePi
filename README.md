@@ -57,7 +57,7 @@ Use Python 3.12, matching the recorded artifact environment. If using uv:
 uv python install 3.12
 uv venv --python 3.12 .venv312
 source .venv312/bin/activate
-uv pip install -r requirements-dev.txt
+uv pip install -r requirements.txt
 python -m pytest -q
 ```
 
@@ -101,12 +101,13 @@ errors. Do not claim the pipeline always writes a compliant file under every fai
 
 ## Optional analysis
 
-- EDA: `python -m pip install -r requirements-analysis.txt`; see [analysis/README.md](analysis/README.md).
+- EDA: see [analysis/README.md](analysis/README.md).
 - Report figures: `python -m tools.report_assessment --assessment results/september_assessment --out results/september_report`.
 - Volatility: [docs/experiments/VOLATILITY.md](docs/experiments/VOLATILITY.md). The risk indicator is a separate
   heuristic, not calibrated confidence. Added magnitude features were not promoted.
-- Dashboard: see [dashboard/README.md](dashboard/README.md). Not part of the inference path.
-- Tests: `python -m pip install -r requirements-dev.txt && python -m pytest -q`.
+- Dashboard: `PYTHONPATH=. python -m streamlit run dashboard/app.py --server.address localhost`; replays held-out
+  September with `artifacts_september_assessment/` (see [dashboard/README.md](dashboard/README.md)). Not part of the inference path.
+- Tests: `python -m pytest -q`.
 
 ## Repository layout
 
@@ -115,6 +116,7 @@ errors. Do not claim the pipeline always writes a compliant file under every fai
 | `aet/` | Model package: training (`aet.train`), inference (`aet.infer`), backtest, features, history |
 | `configs/` | `core.yaml` (folds, candidates), `final.yaml` (frozen submission), `experiments/` (not promoted) |
 | `artifacts_official/` | Trained model used for submission (full training year) |
+| `artifacts_september_assessment/` | Same recipe trained through 2026-08-31; used only by the dashboard |
 | `data/` | Place the official CSV here; not committed |
 | `analysis/` | EDA notebook, reports and figures |
 | `dashboard/` | Optional Streamlit dashboard |

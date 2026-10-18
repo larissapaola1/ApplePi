@@ -1,7 +1,7 @@
 """Interactive explorer for the AET quarter-hour price reconstruction.
 
 Run from the project root:
-    python -m pip install -r requirements-explorer.txt
+    python -m pip install -r requirements.txt
     python -m streamlit run aet/explorer.py
 """
 from __future__ import annotations

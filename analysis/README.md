@@ -12,6 +12,6 @@ It informs the feature design but is not part of training or inference.
 | `figures/september_report/` | Figures from the September hold-out assessment (`tools/report_assessment.py`) |
 
 ```bash
-python -m pip install -r requirements-analysis.txt
+python -m pip install -r requirements.txt
 jupyter notebook analysis/notebooks/EDA_final_Paola.ipynb
 ```

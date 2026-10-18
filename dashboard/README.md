@@ -25,7 +25,7 @@ python -m aet.train --train data/train_through_august.csv --config configs/final
 From the repository root:
 
 ```bash
-python -m pip install -r requirements.txt -r requirements-dashboard.txt
+python -m pip install -r requirements.txt
 PYTHONPATH=. python -m streamlit run dashboard/app.py --server.address localhost
 ```
 

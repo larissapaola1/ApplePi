@@ -127,7 +127,7 @@ dashboard/README.md) ends 2026-08-31. The I2 artifacts remain in Git history. Cu
 defaults the optional volatility_history, geometry, couple_tol, partial_tie, forward_scale,
 price_floor and price_ceiling settings to off, so I2 manifests load unchanged.
 
-Use Python 3.12 and requirements.txt; install requirements-dev.txt and run python -m pytest -q.
+Use Python 3.12 and requirements.txt, then run python -m pytest -q.
 See SUBMISSION.md for portable inference and retraining commands. The official dataset is
 provided separately; no code fetches it during inference. Replication is conditional on runtime
 versions and valid inputs, not a guarantee across all hardware or environments.
