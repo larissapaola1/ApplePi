@@ -126,7 +126,7 @@ You tested the model on your own days and want to see the results as charts. It 
 |---|---|
 | `test_hourly.csv` | The 24 hourly prices of each day you want to test. |
 | `history_15min.csv` | The real 15-minute prices of the days *before* your test days. |
-| `truth_15min.csv` | The real 15-minute prices of your test days, so the dashboard can tell how close the model came. Same columns as the training file: `delivery_date, market_id, hour_index, quarter_index, price_eur_mwh`. Every test day must be complete: 96 quarter-hours for each of the 4 zones. |
+| `git.csv` | The real 15-minute prices of your test days, so the dashboard can tell how close the model came. Same columns as the training file: `delivery_date, market_id, hour_index, quarter_index, price_eur_mwh`. Every test day must be complete: 96 quarter-hours for each of the 4 zones. |
 
 **Step 1: let the model make its predictions.** Run this in the terminal, from the repository folder:
 
@@ -182,9 +182,9 @@ flagged as risky.
 | `data/` | Official training CSV (`train_prices_15min.csv`), `README.md` and the original `README_participants.txt` |
 | `analysis/` | `notebooks/EDA_final.ipynb`, `reports/` (EDA analysis, feature engineering), `figures/` (`eda_final/`, `september_report/`) |
 | `dashboard/` | Optional Streamlit dashboard (`app.py` entry point, one module per page, precomputed 80% intervals in `september_80.json`) |
+| `deliverables/` | `README.md` with the video link (max 2 minutes), 3-page report: `report.pdf` |
 | `docs/` | Methodology, submission contract, provenance, AI usage, references, `experiments/` notes (geometry, volatility) |
 | `tests/` | Unit and end-to-end tests (synthetic data, no network) |
 | `tools/` | Official-metric scorer (`score.py`) and September report figures (`report_assessment.py`) |
 | `results/` | Curated results table (`summary.csv`) and reproduction commands (`README.md`) |
-| `report/` | 3-page report: `report.pdf`, LaTeX source `main.tex`, `images/` |
-| `video/` | `README.md` with the video link (max 2 minutes) |
+
