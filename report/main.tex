@@ -2,7 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage[margin=18mm,headheight=14pt,footskip=10mm]{geometry}
+\usepackage[hmargin=16mm,top=15mm,bottom=12mm,headheight=14pt,headsep=4mm,footskip=7mm]{geometry}
 \usepackage{microtype,graphicx,booktabs,tabularx,amsmath}
 \usepackage[table]{xcolor}
 \usepackage{enumitem,caption,fancyhdr,hyperref}
@@ -19,7 +19,7 @@
 \titlespacing*{\section}{0pt}{8pt}{4pt}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
-\setlist[itemize]{leftmargin=*,topsep=2pt,itemsep=2pt,parsep=0pt}
+\setlist[itemize]{leftmargin=*,topsep=1pt,itemsep=0pt,parsep=0pt}
 \captionsetup{font=small,labelfont=bf,skip=5pt}
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{\small\color{ink}APPLEPI\quad /\quad AET NEURAL WAVE 2026}
@@ -37,19 +37,24 @@ Our assigned AET challenge was to reconstruct \textbf{96 quarter-hour electricit
 An hourly average hides movements between its four quarters. This matters because electricity is not necessarily delivered evenly throughout the hour, so a more detailed price curve could support more accurate valuation. Our task was to recover as much of that missing shape as possible using the official price data, while keeping the hourly reference unchanged.
 
 \section{Approach}
+For hour $h$ and quarter $q$, our prediction is a smooth baseline plus 80\% of a learned correction:
+{\setlength{\abovedisplayskip}{1pt}\setlength{\belowdisplayskip}{0pt}\[
+\hat p_{h,q} = \underbrace{b_{h,q}}_{\text{PCHIP baseline}} + \, 0.8\,\underbrace{\big(c^{\mathrm{slope}}_{h}\,s_q + c^{\mathrm{curv}}_{h}\,k_q + c^{\mathrm{zig}}_{h}\,z_q\big)}_{\text{LightGBM correction}}.
+\]}
+
 We compared simple reconstruction methods before adding machine learning. The most basic option repeats the hourly price four times. Smooth interpolation provides a better starting point, but still misses some of the sharper movements within hours.
 
-We therefore combined PCHIP \footnote{Piecewise Cubic Hermite Interpolating Polynomial} interpolation on the cumulative hourly curve with three LightGBM models. PCHIP provides a shape-preserving baseline that respects hourly averages. LightGBM uses boosted decision trees to learn the remaining corrections from price and calendar features. This gives us a compact model whose output can be explained through three components:
+We therefore combined PCHIP (Piecewise Cubic Hermite Interpolating Polynomial) interpolation on the cumulative hourly curve with three LightGBM models. PCHIP provides a shape-preserving baseline that respects hourly averages. LightGBM uses boosted decision trees to learn the remaining corrections from price and calendar features. This gives us a compact model whose output can be explained through three components:
 \begin{itemize}
 \item \textbf{Slope:} whether prices rise or fall within the hour.
 \item \textbf{Curvature:} whether the middle quarters sit above or below the outer quarters.
 \item \textbf{Zigzag:} alternating movements between quarters.
 \end{itemize}
-The corrections add up to zero within each hour, so they change its shape without changing its average.
+The shapes $s$, $k$, $z$ add up to zero within each hour, so the corrections change its shape, not its average.
 
 The models use the supplied hourly curves, differences between zones, calendar information and earlier price patterns. They never receive the actual quarter-hour prices of the day being reconstructed. We train each LightGBM model to minimise absolute error on its basis coefficient. We select between candidate configurations using the official mean absolute error on reconstructed quarter-hour prices. Applying 80\% of the learned correction worked better during development than applying it in full, so we kept that setting.
 
-Finally, three fixed rules adjust each hour without changing its average: zones with the same hourly price (within 0.1~\euro{}/MWh) share one shape, zones within 5~\euro{}/MWh move 40\% towards it, and quarters keep the sign of their hour. A final numerical adjustment removes floating-point drift, and automated checks verify the output.
+Finally, three fixed rules keep each hourly average: zones within 0.1~\euro{}/MWh share one shape, zones within 5~\euro{}/MWh move 40\% towards it, and quarters keep their hour's sign. A final numerical adjustment removes floating-point drift, and automated checks verify the output.
 
 Our official-data EDA highlighted the importance of slope and motivated a stronger linear-ramp benchmark. Evening ramp hours remained difficult, so we also investigated whether additional shape features could help.
 
@@ -58,9 +63,9 @@ Our official-data EDA highlighted the importance of slope and motivated a strong
 
 \textbf{Keeping the comparison fair.} We used chronological validation and historical inputs matched by calendar date. This prevents missing dates from shifting the history and keeps the target day's quarter-hour observations out of the model inputs.
 
-\textbf{Exploring different model families.} We tested Ridge and CatBoost, as well as temporal CNN, dilated TCN, LSTM and Transformer models. For the baseline-plus-correction approach, we compared LightGBM with CatBoost, Ridge, Random Forest and Extra Trees. We also explored different interpolation methods, correction weights and separate models for each zone.
+\looseness=-1 \textbf{Exploring different model families.} We tested Ridge and CatBoost, as well as temporal CNN, dilated TCN, LSTM and Transformer models. For the baseline-plus-correction approach, we compared LightGBM with CatBoost, Ridge, Random Forest and Extra Trees. We also explored different interpolation methods, correction weights and separate models for each zone.
 
-\textbf{Deciding when to stop adding complexity.} The three rules improved development MAE from \textbf{3.9479 to 3.8883 \euro{}/MWh} in every fold and zone; local-geometry features slightly worsened it (3.9497), so we retained the existing features. We also explored temporal and Bayesian graph models, error-correction models and ensembles. In a separate \textbf{June--August comparison}, a 25\% compact-graph / 75\% reference-model blend reduced MAE from \textbf{4.2246 to 4.2058 \euro{}/MWh}, around 0.4\%. We retained LightGBM because this small gain did not justify the added complexity. These scores use a different window from the main development table.
+\looseness=-1 \textbf{Deciding when to stop adding complexity.} Local-geometry features slightly worsened development MAE from \textbf{3.9479 to 3.9497 \euro{}/MWh}, so we retained the existing features. We also explored temporal and Bayesian graph models, error-correction models and ensembles. In a separate \textbf{June--August comparison}, a 25\% compact-graph / 75\% reference-model blend reduced MAE from \textbf{4.2246 to 4.2058 \euro{}/MWh}, around 0.4\%. We retained LightGBM because this small gain did not justify the added complexity. These scores use a different window from the main development table.
 
 \newpage
 \section{Results}
