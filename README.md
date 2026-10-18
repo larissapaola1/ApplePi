@@ -51,7 +51,13 @@ gate and remain disabled; see [experiment details](docs/experiments/GEOMETRY.md)
 
 ## Install and test
 
-Use Python 3.12, matching the recorded artifact environment. If using uv:
+Use Python 3.12, matching the recorded artifact environment. 
+
+If you don't have [`uv`](https://docs.astral.sh/uv/) installed, run:
+- **macOS / Linux:** `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- **Windows (PowerShell):** `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+
+Once `uv` is installed, set up the environment and run the tests:
 
 ```bash
 uv python install 3.12
