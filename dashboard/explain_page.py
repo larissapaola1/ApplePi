@@ -18,7 +18,7 @@ import streamlit as st
 
 from dashboard import (ASSESSMENT_MODEL, COMPONENTS, FONT, MODEL_ID, MODEL_LABEL, RISK_BADGE, RISK_REASONS, STRETCH,
                              _style, colours, decomposition_chart, explain_reading, explain_risk, hour_label,
-                             inject_style, load_assessment, train_csv_path, zone_name)
+                             inject_style, load_assessment, require_assessment_model, train_csv_path, zone_name)
 from aet.pipeline import ShapePipeline
 
 GROUPS = {   # short names: shown as chart labels and in the table
@@ -176,6 +176,7 @@ def render() -> None:
     except FileNotFoundError as exc:
         st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
         st.stop()
+    require_assessment_model()
     quarters, hours_all = load_assessment(path)
     st.markdown("<div class='hero-title'>Understanding the model</div>"
                 f"<div class='hero-sub'>Why the {MODEL_LABEL.lower()} looks the way it does.</div>"

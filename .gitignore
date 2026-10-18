@@ -18,7 +18,6 @@ results/*
 !results/README.md
 !results/summary.csv
 artifacts_retrained/
-artifacts_september_assessment/
 predictions.csv
 
 /AET-HACKATHON/

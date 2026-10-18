@@ -8,7 +8,7 @@ Run from the repository root, on its own or as the Model Results page of dashboa
     PYTHONPATH=. python -m streamlit run dashboard/dashboard.py --server.address localhost
     # official CSV elsewhere:  ... --server.address localhost -- --train path/to/train_prices_15min.csv
 
-Shows the frozen model trained through 31 Aug 2026 (artifacts_september_assessment) on 1-30 Sep 2026.
+Shows the frozen model trained through 31 Aug 2026 (artifacts_september_assessment, committed) on 1-30 Sep 2026.
 Each date is replayed with quarter-hours strictly before it. Nothing is trained, tuned or written to disk;
 the risk reference is the frozen heuristic of `aet.volatility` (training slice through 31 Jul 2026).
 """
@@ -31,7 +31,7 @@ from aet.pipeline import ShapePipeline
 from aet.volatility import ShapeRisk, risk_inputs
 
 ROOT = Path(__file__).resolve().parent.parent          # repository root (parent of dashboard/)
-ASSESSMENT_MODEL = str(ROOT / "artifacts_official")   # absolute: does not depend on the launch directory
+ASSESSMENT_MODEL = str(ROOT / "artifacts_september_assessment")   # trained through 2026-08-31; absolute path
 INTERVALS = str(Path(__file__).parent / "september_80.json")   # dashboard/intervals.py, calibrated on Jan-Aug folds
 FIRST_DAY, LAST_DAY = "2026-09-01", "2026-09-30"
 RISK_TRAINING_END = "2026-07-31"                      # same slice as `aet.volatility diagnose`
@@ -133,6 +133,14 @@ def train_csv_path() -> Path:
         if Path(candidate).is_file():
             return Path(candidate)
     raise FileNotFoundError(explicit or " or ".join(TRAIN_CSV_CANDIDATES))
+
+
+def require_assessment_model() -> None:
+    """Stop with a readable message if the September hold-out model is missing (see dashboard/README.md)."""
+    if not Path(ASSESSMENT_MODEL, "manifest.json").is_file():
+        st.error(f"Hold-out model not found in `{ASSESSMENT_MODEL}`. Regenerate it with the commands in "
+                 "dashboard/README.md (trained through 2026-08-31).")
+        st.stop()
 
 
 def decompose_day(pipe: ShapePipeline, history: QuarterCube, day, H: np.ndarray):
@@ -654,6 +662,7 @@ def main(standalone: bool = False) -> None:
     except FileNotFoundError as exc:
         st.error(f"Official training CSV not found: {exc}. Start the app with `-- --train PATH`.")
         st.stop()
+    require_assessment_model()
     quarters, hours_all = load_assessment(path)
     c = colours()
 

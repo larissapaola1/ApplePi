@@ -9,8 +9,10 @@ risk flag per hour. It is not part of the inference path.
 
 - `data/train_prices_15min.csv` (see [data/README.md](../data/README.md)), or pass `-- --train <path>`
   or set `AET_TRAIN_CSV`.
-- `artifacts_september_assessment/`: the final configuration trained **through 2026-08-31 only**, so
-  September is genuinely held out. It is not committed; regenerate it once:
+- `artifacts_september_assessment/` (committed): the final configuration trained **through 2026-08-31
+  only**, so September is genuinely held out. The submission model `artifacts_official/` (trained through
+  2026-09-30) is *not* used here, because it has already seen September. To regenerate the folder from
+  scratch (gives identical predictions):
 
 ```bash
 python -c "import pandas as pd; d = pd.read_csv('data/train_prices_15min.csv'); \
