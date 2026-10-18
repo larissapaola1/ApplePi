@@ -21,7 +21,7 @@
 \pagestyle{fancy}\fancyhf{}
 \fancyhead[L]{\small\sffamily\bfseries\color{ink}NEURAL WAVE 2026\enspace /\enspace AI HACKATHON}
 \fancyhead[R]{\small\sffamily\color{muted}AET challenge}
-\fancyfoot[L]{\small\sffamily\color{muted}TEAM APPLEPI}
+\fancyfoot[L]{\small\sffamily\color{muted}Apple$\pi$}
 \fancyfoot[R]{\small\sffamily\color{muted}\thepage\ /\ 3}
 \renewcommand{\headrulewidth}{0.3pt}
 \newcommand{\resulttable}{\setlength{\tabcolsep}{8pt}\renewcommand{\arraystretch}{1.26}\arrayrulecolor{tablerule}}
@@ -35,30 +35,43 @@
 \section{The challenge}
 Our task was to reconstruct \textbf{96 quarter-hour electricity prices from 24 supplied hourly prices}, for each of four market zones. An hourly average hides movements between its four quarters. A more detailed curve could therefore help AET understand price differences within the hour and support valuation when electricity is delivered unevenly.
 
-The challenge was to recover that detail without changing the hourly reference: the four reconstructed prices must average back to the supplied hourly price, within \textbf{0.0001 \euro{}/MWh}. We used the official price data and aimed for a solution we could both evaluate and explain.
+Using the official price data, we had to recover that detail while preserving each hourly average within \textbf{0.0001 \euro{}/MWh}. We aimed for a solution we could both evaluate and explain.
 
 \section{Approach: learn the shape, preserve the average}
-Repeating each hourly price four times gives a flat baseline. Smooth interpolation improves on this, but misses sharper movements. Our EDA highlighted the importance of slope, leading us to a layered reconstruction.
+Our EDA highlighted slope: we combine a smooth baseline with learned corrections for sharper movements.
 
-The central idea is a baseline plus a learned shape correction:
+The prediction combines a smooth PCHIP baseline with a learned correction:
+{\setlength{\abovedisplayskip}{5pt}\setlength{\belowdisplayskip}{5pt}
 \[
 \widehat{P}_{h,q}
 =\underbrace{B_{h,q}}_{\text{smooth baseline}}
 +0.8\times\underbrace{R_{h,q}}_{\text{learned correction}}.
-\]
-For each hour $h$ and quarter $q$, we start from a smooth PCHIP baseline and add a learned correction combining slope, curvature and zigzag. The four corrections within each hour sum to zero, so its average stays unchanged. The fixed rules then adjust predictions while preserving that average.
+\]}
+For hour $h$ and quarter $q$, three LightGBM models learn the weights of the following shapes. Values correspond to \textbf{Q1, Q2, Q3, Q4}, in that order:
 
-\textbf{A learned correction.} Three LightGBM models, based on boosted decision trees, learn what the baseline misses: \textbf{slope} (rising or falling prices), \textbf{curvature} (middle versus outer quarters), and \textbf{zigzag} (alternating movements). These components change the within-hour shape without moving its average.
+\begin{center}
+\resulttable
+\small
+\begin{tabularx}{\linewidth}{*{3}{>{\raggedright\arraybackslash}X}}
+\rowcolor{tablehead}\textbf{Basis} & \textbf{Pattern} & \textbf{Normalized values used by the model}\\\hline
+Slope & $[-3,-1,1,3]$ & $[-0.671,-0.224,0.224,0.671]$\\\hline
+Curvature & $[1,-1,-1,1]$ & $[0.5,-0.5,-0.5,0.5]$\\\hline
+Zigzag & $[-1,3,-3,1]$ & $[-0.224,0.671,-0.671,0.224]$\\\hline
+\end{tabularx}
+\captionof{table}{The three within-hour patterns. Normalized values are rounded; the model uses full precision.}
+\end{center}
 
-Inputs include the day's hourly curve, differences between zones, calendar information and earlier price patterns. The target day's actual quarter-hour prices are excluded. We train with absolute-error loss on the three component coefficients and select configurations using price-level MAE. The \textbf{80\% correction scale} improved development results; it is fixed, not confidence-based.
+Each vector sums to zero, so any weighted combination does too. The learned coefficients change the within-hour prices without changing their average, even after applying the fixed scale of 0.8.
 
-\textbf{Final adjustments.} Fixed rules align predicted shapes for zones with nearly equal hourly prices and restrict sign changes within an hour. All preserve the hourly mean. Together with increasing the boosting rounds from 500 to 1,000, they reduced development MAE by 1.5\%, improving all eight folds. These are empirical choices validated on this dataset, rather than market rules.
+Inputs include the day's hourly curve, differences between zones, calendar information and earlier price patterns. The target day's actual quarter-hour prices are excluded. Training minimizes coefficient-level absolute error; selection uses price-level MAE. The fixed 80\% correction scale improved development results.
+
+\textbf{Final adjustments.} Mean-preserving rules align shapes for zones with nearly equal hourly prices and restrict within-hour sign changes. Together with increasing boosting rounds from 500 to 1,000, they reduced development MAE by 1.5\% across all eight folds. These are empirical choices, not market rules.
 
 
 \section{Challenges and solutions}
 \textbf{Missing information and fair validation.} Many quarter-hour profiles share the same hourly average, so some detail remains unpredictable. We used chronological validation and calendar-based history lookups to avoid future information and incorrect lags when dates are missing.
 
-\textbf{Deciding when to stop adding complexity.} We chose the final model because it offered a good balance between accuracy, simplicity and interpretability. Local-geometry features slightly worsened development MAE (3.9479 to 3.9497 \euro{}/MWh), so we retained the existing features. We also explored graph models, error-correction models and ensembles. Some achieved similar or slightly lower errors; however, in a separate June--August comparison, a graph-model blend improved MAE by only 0.4\%, which we judged insufficient to justify the added complexity. Our architecture separates each reconstruction into the PCHIP baseline, three shape corrections and final rule adjustments. This makes the output easier to explain through the dashboard, helps us investigate unusual predictions, and allows future changes to individual components while preserving hourly averages.
+\textbf{Deciding when to stop adding complexity.} We chose the final model because it offered a good balance between accuracy, simplicity and interpretability. Local-geometry features slightly worsened development MAE (3.9479 to 3.9497 \euro{}/MWh), so we retained the existing features. We also explored graph models, error-correction models and ensembles. Some achieved similar or slightly lower errors. However, a graph blend improved MAE by only 0.4\% in a separate June--August comparison, too little to justify the added complexity. Separating the baseline, three corrections and rules makes predictions easier to explain in the dashboard and investigate, while allowing individual components to change without losing hourly consistency.
 
 \newpage
 \section{Results: more detail, less reconstruction error}
