@@ -1,6 +1,6 @@
 # Feature engineering recommendations
 
-Based on [EDA_final_Paola.ipynb](../notebooks/EDA_final_Paola.ipynb) and its write-up [EDA_analysis.md](EDA_analysis.md). Every feature is tied to the EDA finding that motivates it, and compared with what the AET pipeline already builds ([aet/features.py](../../aet/features.py)).
+Based on [EDA_final.ipynb](../notebooks/EDA_final.ipynb) and its write-up [EDA_analysis.md](EDA_analysis.md). Every feature is tied to the EDA finding that motivates it, and compared with what the AET pipeline already builds ([aet/features.py](../../aet/features.py)).
 
 ## Ground rules (apply to every feature)
 
