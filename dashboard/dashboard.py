@@ -30,14 +30,15 @@ from intervals import band, chance_within, load_table   # dashboard/intervals.py
 from aet.pipeline import ShapePipeline
 from aet.volatility import ShapeRisk, risk_inputs
 
-ASSESSMENT_MODEL = "artifacts_september_assessment"   # trained through 2026-08-31
+ROOT = Path(__file__).resolve().parent.parent          # repository root (parent of dashboard/)
+ASSESSMENT_MODEL = str(ROOT / "artifacts_official")   # absolute: does not depend on the launch directory
 INTERVALS = str(Path(__file__).parent / "september_80.json")   # dashboard/intervals.py, calibrated on Jan-Aug folds
 FIRST_DAY, LAST_DAY = "2026-09-01", "2026-09-30"
 RISK_TRAINING_END = "2026-07-31"                      # same slice as `aet.volatility diagnose`
-TRAIN_CSV_CANDIDATES = (                              # AET-HACKATHON may sit inside or beside ApplePi
-    "../Data/train_prices_15min.csv",
-    "../ApplePi/Data/train_prices_15min.csv",
-    "data/train_prices_15min.csv",
+TRAIN_CSV_CANDIDATES = (                              # anchored to the repository root, not the current directory
+    str(ROOT / "data" / "train_prices_15min.csv"),
+    str(ROOT.parent / "data" / "train_prices_15min.csv"),
+    str(ROOT.parent / "Data" / "train_prices_15min.csv"),
 )
 
 MODEL_LABEL = "Model Price Prediction"   # display name of the final reconstructed price (chart line)
