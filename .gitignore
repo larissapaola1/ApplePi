@@ -8,11 +8,6 @@ dist/
 .agents*
 .claude*
 
-# Data is not redistributed: place the official CSV in data/ (see data/README.md)
-data/*
-!data/README.md
-!data/README_participants.txt
-
 # Generated outputs; only the curated summary is committed
 results/*
 !results/README.md
@@ -21,3 +16,6 @@ artifacts_retrained/
 predictions.csv
 
 /AET-HACKATHON/
+
+# Temporary input for rebuilding artifacts_september_assessment (see dashboard/README.md)
+data/train_through_august.csv

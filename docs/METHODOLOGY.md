@@ -122,7 +122,7 @@ numerical translations of quarter-specific errors, not actual AET positions, pro
 
 artifacts_official/ contains the three I3 boosters, history_store.npz and a manifest recording
 training dates 2025-10-01..2026-09-30, data/config hashes, versions and the post-processing
-settings. The separate artifacts_september_assessment/ (not committed; regenerate as in
+settings. The separate artifacts_september_assessment/ (committed; regenerate as in
 dashboard/README.md) ends 2026-08-31. The I2 artifacts remain in Git history. Current source
 defaults the optional volatility_history, geometry, couple_tol, partial_tie, forward_scale,
 price_floor and price_ceiling settings to off, so I2 manifests load unchanged.

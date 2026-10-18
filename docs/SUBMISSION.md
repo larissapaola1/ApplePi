@@ -30,7 +30,7 @@ and filesystem failures cannot be guaranteed to produce a compliant file and are
 
 ## Regenerate artifacts from the organisers' official package
 
-The official dataset is not committed; place the organisers' file at data/train_prices_15min.csv or set TRAIN_CSV to its actual location:
+The official dataset is committed at data/train_prices_15min.csv; set TRAIN_CSV to use another copy:
 
 ```bash
 export TRAIN_CSV="data/train_prices_15min.csv"

@@ -117,7 +117,7 @@ errors. Do not claim the pipeline always writes a compliant file under every fai
 | `configs/` | `core.yaml` (folds, candidates), `final.yaml` (frozen submission), `experiments/` (not promoted) |
 | `artifacts_official/` | Trained model used for submission (full training year) |
 | `artifacts_september_assessment/` | Same recipe trained through 2026-08-31; used only by the dashboard |
-| `data/` | Place the official CSV here; not committed |
+| `data/` | Official training CSV (`train_prices_15min.csv`) and its documentation |
 | `analysis/` | EDA notebook, reports and figures |
 | `dashboard/` | Optional Streamlit dashboard |
 | `docs/` | Methodology, submission contract, provenance, AI usage, references, experiment notes |

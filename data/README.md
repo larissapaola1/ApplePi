@@ -1,7 +1,7 @@
 # Data
 
-The official participant dataset is **not committed**. Place it here before training or running the
-EDA notebook:
+The official participant dataset is committed here and is used for training, the EDA notebook and the
+dashboard:
 
 ```
 data/train_prices_15min.csv
