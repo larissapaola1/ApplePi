@@ -1,157 +1,131 @@
 \documentclass[10pt,a4paper]{article}
+\usepackage{amsmath}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern}
-\usepackage[hmargin=16mm,top=15mm,bottom=12mm,headheight=14pt,headsep=4mm,footskip=7mm]{geometry}
-\usepackage{microtype,graphicx,booktabs,tabularx,amsmath}
+\usepackage{lmodern,microtype,graphicx,tabularx,booktabs,array,enumitem,caption,fancyhdr,titlesec,hyperref,eurosym}
 \usepackage[table]{xcolor}
-\usepackage{enumitem,caption,fancyhdr,hyperref}
-\definecolor{ink}{HTML}{17344A}
+\usepackage[left=19mm,right=19mm,top=23mm,bottom=18mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\definecolor{ink}{HTML}{18364A}
 \definecolor{accent}{HTML}{087E74}
-\definecolor{tablehead}{HTML}{EEF1F3}
-\definecolor{tablerule}{HTML}{DDE3E7}
-\definecolor{tablefinal}{HTML}{EDF7F4}
-\hypersetup{colorlinks=true,urlcolor=accent,linkcolor=ink,pdftitle={Beyond the hourly average},pdfauthor={ApplePi}}
-\usepackage{titlesec}
-\usepackage{eurosym} 
-\usepackage{newunicodechar}
-\titleformat{\section}{\large\bfseries\color{ink}}{}{0pt}{}
-\titlespacing*{\section}{0pt}{6pt}{3pt}
+\definecolor{muted}{HTML}{536573}
+\definecolor{tablehead}{HTML}{EEF2F4}
+\definecolor{tablerule}{HTML}{DDE4E8}
+\definecolor{tablefinal}{HTML}{EDF7F3}
+\hypersetup{colorlinks=true,urlcolor=accent,linkcolor=ink,pdftitle={Beyond the hourly average: AET challenge},pdfauthor={Team ApplePi}}
+\titleformat{\section}{\large\sffamily\bfseries\color{ink}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{10pt}{5pt}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{3.5pt}
-\setlist[itemize]{leftmargin=*,topsep=1pt,itemsep=0pt,parsep=0pt}
-\captionsetup{font=small,labelfont=bf,skip=5pt}
+\setlength{\parskip}{5pt}
+\setlist[itemize]{leftmargin=13pt,topsep=3pt,itemsep=2pt,parsep=0pt}
+\captionsetup{font=small,labelfont=bf,skip=5pt,justification=raggedright,singlelinecheck=false}
 \pagestyle{fancy}\fancyhf{}
-\fancyhead[L]{\small\color{ink}APPLEPI\quad /\quad AET NEURAL WAVE 2026}
-\fancyhead[R]{\small Project report}
-\fancyfoot[R]{\small\thepage\ /\ 3}
+\fancyhead[L]{\small\sffamily\bfseries\color{ink}NEURAL WAVE 2026\enspace /\enspace AI HACKATHON}
+\fancyhead[R]{\small\sffamily\color{muted}AET challenge}
+\fancyfoot[L]{\small\sffamily\color{muted}TEAM APPLEPI}
+\fancyfoot[R]{\small\sffamily\color{muted}\thepage\ /\ 3}
 \renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\resulttable}{\setlength{\tabcolsep}{8pt}\renewcommand{\arraystretch}{1.26}\arrayrulecolor{tablerule}}
 \begin{document}
-{\LARGE\bfseries\color{ink} Beyond the hourly average}\par
-{\large Quarter-hour price reconstruction for AET}
-\vspace{0pt}
+\fontsize{10.5}{13}\selectfont
+{\fontsize{23}{26}\selectfont\sffamily\bfseries\color{ink}Beyond the hourly average}\par
+{\large\sffamily Quarter-hour electricity price reconstruction}\par
+{\small\color{muted}Challenge proposed by \textbf{AET -- Azienda Elettrica Ticinese}}\par
+\vspace{2pt}
 
 \section{The challenge}
-Our assigned AET challenge was to reconstruct \textbf{96 quarter-hour electricity prices from 24 supplied hourly prices}, for each of four market zones. The four reconstructed prices within every hour must average back to the supplied hourly price, within a tolerance of \textbf{0.0001 \euro{}/MWh}.
+Our task was to reconstruct \textbf{96 quarter-hour electricity prices from 24 supplied hourly prices}, for each of four market zones. An hourly average hides movements between its four quarters. A more detailed curve could therefore help AET understand price differences within the hour and support valuation when electricity is delivered unevenly.
 
-An hourly average hides movements between its four quarters. This matters because electricity is not necessarily delivered evenly throughout the hour, so a more detailed price curve could support more accurate valuation. Our task was to recover as much of that missing shape as possible using the official price data, while keeping the hourly reference unchanged.
+The challenge was to recover that detail without changing the hourly reference: the four reconstructed prices must average back to the supplied hourly price, within \textbf{0.0001 \euro{}/MWh}. We used the official price data and aimed for a solution we could both evaluate and explain.
 
-\section{Approach}
-Our analysis of the official data shaped the model. The hourly price already explains 93--96\% of the price variance; what is scored is the shape inside each hour. That shape is largely predictable: the slope between neighbouring hours correlates 0.76--0.91 with the tilt inside the hour, as prices slide with the daily curve and snap back at the next hour. What remains concentrates at ramps, turning points and day edges. We therefore built the prediction in layers:
-{\setlength{\abovedisplayskip}{1pt}\setlength{\belowdisplayskip}{0pt}\[
-\hat p_{h,q} = \underbrace{b_{h,q}}_{\text{PCHIP baseline}} + \, 0.8\,\underbrace{\big(c^{\mathrm{slope}}_{h}\,s_q + c^{\mathrm{curv}}_{h}\,k_q + c^{\mathrm{zig}}_{h}\,z_q\big)}_{\text{LightGBM correction}}, \quad\text{then three fixed rules.}
-\]}
+\section{Approach: learn the shape, preserve the average}
+Repeating each hourly price four times gives a flat baseline. Smooth interpolation improves on this, but misses sharper movements. Our EDA highlighted the importance of slope, leading us to a layered reconstruction.
 
-\textbf{Baseline.} We interpolate the running sum of hourly prices with PCHIP (Piecewise Cubic Hermite Interpolating Polynomial) and difference it back into quarters. The increments telescope, so every hourly average is exact, and PCHIP does not overshoot at spikes. This captures the smooth part of the slope (development MAE 8.13 flat $\to$ 5.62~\euro{}/MWh).
+The central idea is a baseline plus a learned shape correction:
+\[
+\widehat{P}_{h,q}
+=\underbrace{B_{h,q}}_{\text{smooth baseline}}
++0.8\times\underbrace{R_{h,q}}_{\text{learned correction}}.
+\]
+For each hour $h$ and quarter $q$, we start from a smooth PCHIP baseline and add a learned correction combining slope, curvature and zigzag. The four corrections within each hour sum to zero, so its average stays unchanged. The fixed rules then adjust predictions while preserving that average.
 
-\textbf{Correction.} With the hourly mean fixed, four quarters have exactly three degrees of freedom. Three orthonormal vectors whose entries sum to zero therefore describe every possible shape, and adding them can never move the average:
-\begin{itemize}
-\item \textbf{Slope}, $s=(-3,-1,1,3)/\sqrt{20}$: whether prices rise or fall within the hour.
-\item \textbf{Curvature}, $k=(1,-1,-1,1)/2$: whether the middle quarters sit above or below the outer quarters.
-\item \textbf{Zigzag}, $z=(-1,3,-3,1)/\sqrt{20}$: alternating movements between quarters.
-\end{itemize}
-One LightGBM model per vector predicts its coefficient from the day's hourly curve, differences between zones, calendar information and earlier quarter-hour patterns, never from the target day's quarter-hours. Boosted trees suit the non-linear situations behind the remaining error, such as ramps and turning points, and an absolute-error loss keeps spikes from dominating training. This basis beat a Haar basis (3.98 vs 4.00 \euro{}/MWh), and removing cross-zone features worsened MAE to 4.04. Applying 80\% of the predicted correction lowered MAE by a further 0.9\% (6 of 8 folds): when the model is unsure, a partial correction is safer than a full one.
+\textbf{A learned correction.} Three LightGBM models, based on boosted decision trees, learn what the baseline misses: \textbf{slope} (rising or falling prices), \textbf{curvature} (middle versus outer quarters), and \textbf{zigzag} (alternating movements). These components change the within-hour shape without moving its average.
 
-\textbf{Fixed rules.} Three rules with no fitted parameters then adjust each hour, keeping its average:
-\begin{itemize}
-\item \textbf{Zone coupling:} zones with almost the same hourly price (within 0.1~\euro{}/MWh) usually move together, so they share one shape: the average of their predicted shapes.
-\item \textbf{Partial tie:} zones within 5~\euro{}/MWh behave similarly but less reliably; each moves 40\% towards the group's shape.
-\item \textbf{Sign rule:} quarters rarely change sign within an hour. In a positive hour no quarter may fall below $-0.01$~\euro{}/MWh, in a negative hour none may exceed 0; the remaining quarters shift to keep the average.
-\end{itemize}
-Adding the rules and 1000 (not 500) boosting rounds cut development MAE by 1.5\% (all 8 folds). A final adjustment removes floating-point drift, and automated checks confirm the 0.0001~\euro{}/MWh tolerance.
+Inputs include the day's hourly curve, differences between zones, calendar information and earlier price patterns. The target day's actual quarter-hour prices are excluded. We train with absolute-error loss on the three component coefficients and select configurations using price-level MAE. The \textbf{80\% correction scale} improved development results; it is fixed, not confidence-based.
+
+\textbf{Final adjustments.} Fixed rules align predicted shapes for zones with nearly equal hourly prices and restrict sign changes within an hour. All preserve the hourly mean. Together with increasing the boosting rounds from 500 to 1,000, they reduced development MAE by 1.5\%, improving all eight folds. These are empirical choices validated on this dataset, rather than market rules.
+
 
 \section{Challenges and solutions}
-\textbf{Working with incomplete information.} Many quarter-hour profiles share the same hourly average, so we could learn recurring patterns but never recover every movement exactly.
+\textbf{Missing information and fair validation.} Many quarter-hour profiles share the same hourly average, so some detail remains unpredictable. We used chronological validation and calendar-based history lookups to avoid future information and incorrect lags when dates are missing.
 
-\looseness=-1 \textbf{Keeping the comparison fair.} We used chronological validation and historical inputs matched by calendar date, so missing dates cannot shift the history and the target day's quarter-hours never reach the model. A change was promoted only if it lowered development MAE by at least 0.5\%, improved at least two-thirds of the folds and left no zone more than 2\% worse.
-
-\looseness=-1 \textbf{Deciding when to stop adding complexity.} We tested Ridge, CatBoost, temporal CNN, dilated TCN, LSTM and Transformer models; for the correction we compared LightGBM with CatBoost, Ridge, Random Forest and Extra Trees, and we tried other interpolation methods, correction weights and per-zone models. Most ideas failed the gate. Local-geometry features slightly worsened our previous model's development MAE (\textbf{3.9479 to 3.9497 \euro{}/MWh}). We also explored temporal and Bayesian graph models, error-correction models and ensembles: in a separate \textbf{June--August window}, a 25\% compact-graph / 75\% previous-model blend reduced MAE from \textbf{4.2246 to 4.2058 \euro{}/MWh} (0.4\%), below the gate and not worth the added complexity.
+\textbf{Knowing when to stop adding complexity.} We explored Ridge, CatBoost, Random Forest, Extra Trees, temporal neural networks and graph models. Local-geometry features worsened the previous model's MAE from \textbf{3.9479 to 3.9497 \euro{}/MWh}. In a separate June--August comparison, a graph blend improved it from \textbf{4.2246 to 4.2058} (0.4\%). That gain was too small to justify the added complexity, so we retained LightGBM.
 
 \newpage
-\section{Results}
-We report mean absolute error (MAE) between reconstructed and observed prices, with equal weight for each day and zone. For development, we used eight chronological January--August folds, training on earlier dates and scoring days 19 through month-end. We then assessed a model trained through 31 August on 19--30 September. September results are also available for the graph experiments, and we scored September again before switching to the final rules, so we report this as a historical assessment rather than an untouched final test.
+\section{Results: more detail, less reconstruction error}
+We measure accuracy with mean absolute error (MAE): the average distance between reconstructed and observed prices. Each evaluation day and zone has equal weight; lower is better. The final model reduces MAE by \textbf{52.2\% on development dates} and \textbf{54.1\% on September}, compared with repeating hourly prices.
 
-\textbf{Overall reconstruction accuracy}
+Development uses eight chronological January--August folds, training on earlier dates and scoring days 19 through month-end. September covers 19--30 September, with training through August. September was examined in several experiments before the final changes, so it is a \textbf{historical assessment, not an untouched final test}.
+
 \begin{center}
-\setlength{\tabcolsep}{10pt}
-\renewcommand{\arraystretch}{1.35}
-\arrayrulecolor{tablerule}
+\resulttable
 \begin{tabularx}{\linewidth}{*{3}{>{\raggedright\arraybackslash}X}}
-\rowcolor{tablehead}
-\textbf{Method} & \textbf{Development MAE} & \textbf{September MAE}\\\hline
+\rowcolor{tablehead}\textbf{Method} & \textbf{Development MAE} & \textbf{September MAE}\\\hline
 Flat hourly prices & 8.13 & 10.90\\\hline
-PCHIP & 5.62 & 6.93\\\hline
+PCHIP baseline & 5.62 & 6.93\\\hline
 Full correction (scale 1.0) & 3.98 & 5.43\\\hline
 Previous model (no rules) & 3.95 & 5.04\\\hline
-\rowcolor{tablefinal}
-\textbf{Final model} & \textbf{3.89} & \textbf{5.00}\\\hline
+\rowcolor{tablefinal}\textbf{Final model} & \textbf{3.89} & \textbf{5.00}\\\hline
 \end{tabularx}
-\captionof{table}{Average price error in \euro{}/MWh{}. Each step adds one layer of the approach; the full correction and the previous model (500 boosting rounds, no rules) are comparisons, not the submitted model.}
+\captionof{table}{Average price error in \euro{}/MWh. All September scores use the same dates. The previous model uses 500 boosting rounds and no final adjustment rules; the final model uses 1,000 rounds and the rules.}
 \end{center}
 
-\vspace{4pt}
-\textbf{By zone (September assessment)}
 \begin{center}
-\setlength{\tabcolsep}{10pt}
-\renewcommand{\arraystretch}{1.3}
-\arrayrulecolor{tablerule}
+\resulttable
 \begin{tabularx}{\linewidth}{*{4}{>{\raggedright\arraybackslash}X}}
-\rowcolor{tablehead}
-\textbf{Zone} & \textbf{Model MAE} & \textbf{Flat MAE} & \textbf{Error reduction}\\\hline
+\rowcolor{tablehead}\textbf{Zone} & \textbf{Model MAE} & \textbf{Flat MAE} & \textbf{Error reduction}\\\hline
 ZONE\_0 & 3.83 & 10.78 & \textcolor{accent}{64.5\%}\\\hline
 ZONE\_1 & 6.12 & 13.30 & \textcolor{accent}{54.0\%}\\\hline
 ZONE\_2 & 5.49 & 9.72 & \textcolor{accent}{43.5\%}\\\hline
 ZONE\_3 & 4.57 & 9.79 & \textcolor{accent}{53.3\%}\\\hline
 \end{tabularx}
-\captionof{table}{September average price error by zone, comparing the final model with repeating the hourly price.}
+\captionof{table}{September results by zone. Reductions compare the final model with flat hourly prices and are calculated before rounding. Source: \texttt{results/summary.csv}.}
 \end{center}
 
-The final model reduces average price error by \textbf{52.2\% on development dates} and \textbf{54.1\% on the September assessment}, compared with flat prices. On development dates, PCHIP removes 31\% of the flat error, and the correction and rules remove a further 31\% of what remains. Gains follow the EDA: ZONE\_0, where the slope between hours predicts the tilt best ($r=0.91$), improves most; ZONE\_2, where it is weakest ($r=0.76$), improves least. Compared with the previous model, the September gain is smaller (0.8\%), and ZONE\_3 is slightly worse (4.57 instead of 4.55).
+The model improves on flat prices in every zone. The final changes bring a smaller September gain over the previous model (0.8\%), with ZONE\_3 slightly worse (4.57 versus 4.55). These are price-accuracy results; effects on trading or portfolio valuations have not been measured.
 
 \begin{center}
-\includegraphics[width=0.67\linewidth]{images/representative_reconstruction.png}
-\captionof{figure}{Reconstruction on 20 September 2026 across the four zones. Observed quarter-hour prices are compared with hourly repetition, PCHIP and the final model.}
+\includegraphics[width=0.76\linewidth]{images/representative_reconstruction.png}
+\captionof{figure}{Reconstruction on 20 September 2026 across all four zones. The observed curve shows both where the model recovers detail and where sharp movements remain difficult.}
 \end{center}
 
-For us, these results suggest that there is useful structure to recover beyond the hourly average. However, we evaluated price accuracy; we have not measured the effect on actual trading results or portfolio valuations.
+
 
 \newpage
-\section{Dashboard: results and how to read them}
-We also wanted to make the results approachable for someone who does not work with machine learning. The main page of our interactive dashboard, \textbf{Model Results}, replays the September hold-out (or the user's own test days): for one zone or all four, and any date range, it compares reconstructed with observed prices and reports the error per zone. Three complementary pages help interpret these results:
-\begin{itemize}
-\item \textbf{Understanding the Model:} what the model relies on overall, and one hour broken down into baseline, slope, curvature, zigzag and rules, next to the observed prices (Figure~2).
-\item \textbf{Risk Alerts:} the hours to trust less, flagged before their 15-minute prices are known.
-\item \textbf{Data Story:} the patterns in the official data that shaped the model.
-\end{itemize}
+\section{Dashboard: making the predictions understandable}
+We also wanted someone without a machine-learning background to be able to explore the results. The dashboard brings together \textbf{Model Results}, \textbf{Understanding the Model}, \textbf{Risk Alerts} and the \textbf{Data Story}. Users can compare price curves, inspect one hour's component contributions and see the signal behind its risk flag.
 
 \begin{center}
-\includegraphics[width=0.74\linewidth,trim=0 76bp 0 55bp,clip]{images/dashboard_detail.png}
-\captionof{figure}{Understanding the Model page for ZONE\_0 on 19 September 2026, 18:00--19:00.}
+\includegraphics[width=0.82\linewidth,trim=0 76bp 0 55bp,clip]{images/dashboard_detail.png}
+\captionof{figure}{ZONE\_0, 19 September 2026, 18:00--19:00. The dashboard separates the smooth curve, learned corrections and fixed rules, and compares the result with observed prices.}
 \end{center}
 
-The risk flags use hourly ramps, daily price variability and recent historical reconstruction difficulty, and name the main signal behind each label. They are \textbf{heuristics, not calibrated confidence probabilities}.
-
-\subsection*{Does the indicator identify harder hours?}
-On the January--August development folds, hours flagged as high-risk had \textbf{2.8--3.9 times the reconstruction error} of low-risk hours across the four zones. This suggests that the indicator helps distinguish harder hours, although it does not guarantee an individual prediction's accuracy.
+\section{Does the risk indicator identify harder hours?}
+The indicator combines hourly ramps, daily variability and recent historical reconstruction difficulty. On development folds, high-risk hours had \textbf{2.8--3.9 times the MAE} of low-risk hours. This suggests that the labels identify harder conditions, but they are \textbf{heuristics, not calibrated confidence probabilities} or guarantees for individual predictions.
 
 \begin{center}
-\setlength{\tabcolsep}{8pt}
-\renewcommand{\arraystretch}{1.2}
-\arrayrulecolor{tablerule}
+\resulttable
 \begin{tabularx}{\linewidth}{*{4}{>{\raggedright\arraybackslash}X}}
-\rowcolor{tablehead}
-\textbf{Zone} & \textbf{Low-risk MAE} & \textbf{High-risk MAE} & \textbf{High / low}\\\hline
+\rowcolor{tablehead}\textbf{Zone} & \textbf{Low-risk MAE} & \textbf{High-risk MAE} & \textbf{High / low}\\\hline
 ZONE\_0 & 1.51 & 5.89 & 3.9$\times$\\\hline
 ZONE\_1 & 2.80 & 8.32 & 3.0$\times$\\\hline
 ZONE\_2 & 2.03 & 5.68 & 2.8$\times$\\\hline
 ZONE\_3 & 2.22 & 7.20 & 3.2$\times$\\\hline
 \end{tabularx}
-\captionof{table}{Observed reconstruction MAE in \euro{}/MWh{} by risk group on the development folds.}
+\captionof{table}{Observed group MAE in \euro{}/MWh on January--August development folds. These reused folds provide development evidence, not an independent final test of the indicator.}
 \end{center}
 
 \section{AI agents and LLM usage}
-We worked with LLM-based coding assistants throughout the project, especially when coding. It was an iterative process: we tried an approach, looked at the results, and used the assistants to help identify errors and work through possible solutions. We also discussed our EDA findings with them to explore which features or model changes might be worth testing. We then checked those suggestions through tests and backtesting, keeping the changes that improved the results. Finally, we used them to help organise and revise the repository, report and presentation, refining the explanations through several rounds of feedback.
+We worked with LLM-based coding assistants throughout the project, especially when coding. It was an iterative process: we tried an approach, looked at the results, and used the assistants to help identify errors and work through possible solutions. We also discussed our EDA findings with them to explore features and model changes worth testing. We checked suggestions through tests and backtesting, keeping changes supported by the results. Finally, we used them to help organise and revise the repository, report and presentation through several rounds of feedback.
 
-\section{More Information}
-The papers, libraries and challenge materials we consulted are listed in \texttt{docs/REFERENCES.md} in the repository, including references related to the approaches we tested but did not retain.
+{\small The papers, libraries and challenge materials we consulted are listed in \texttt{docs/REFERENCES.md} in the repository, including approaches tested but not retained.}
 \end{document}
