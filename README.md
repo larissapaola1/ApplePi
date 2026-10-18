@@ -34,8 +34,8 @@ The current configuration (I3) and supplied `artifacts_official/` use:
 | I2, previous final (no post-processing, 500 rounds) | 3.9479 | 5.0444 |
 | **I3, current final** | **3.8883** | **5.0032** |
 
-EUR/MWh. Development: eight Jan–Aug monthly folds, days 19–month-end. September: train
-through August, assess 19–30 September. September aggregate EDA had already been inspected,
+Development: eight Jan–Aug monthly folds, days 19–month-end. 
+September: train through August, assess 19–30 September. September aggregate EDA had already been inspected,
 and September was scored a second time when switching from I2 to I3, so it is not an untouched
 holdout for I3 (docs/METHODOLOGY.md section 4). Exported inference scores 5.0035 rather than
 5.0032 due to tiny hourly-input rounding differences affecting tree branches and tie tolerances;
